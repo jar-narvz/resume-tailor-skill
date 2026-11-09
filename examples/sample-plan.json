@@ -1,0 +1,21 @@
+{
+  "variant": "swe",
+  "company": "Globex Logistics",
+  "role": "Backend Software Engineer Intern",
+  "skills": [
+    {"label": "Languages", "items": ["Go", "Python", "SQL", "Java", "TypeScript"]},
+    {"label": "Frameworks & Tools", "items": ["PostgreSQL", "Docker", "GitHub Actions", "Redis", "Node.js", "pytest", "Git"]},
+    {"label": "Concepts", "items": ["REST APIs", "Distributed Systems", "Consensus (Raft)", "CI/CD", "Unit Testing"]}
+  ],
+  "projects": [
+    {"id": "proj-kv", "bullets": ["kv-1", "kv-2", "kv-3"]},
+    {"id": "proj-chat", "bullets": ["chat-2", "chat-1", "chat-3", "chat-4"]},
+    {"id": "proj-plant", "bullets": ["plant-2", "plant-1", "plant-4"]}
+  ],
+  "experience": {
+    "acme": [
+      {"reframe_of": "acme-1",
+       "text": "Built a Python service that batches inventory updates into PostgreSQL from 40+ warehouses, cutting nightly sync time from 3 hours to 25 minutes."},
+      "acme-2", "acme-4", "acme-3", "acme-5"]
+  }
+}
