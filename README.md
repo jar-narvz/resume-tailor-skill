@@ -123,8 +123,10 @@ fixes the plan and rebuilds rather than delivering a broken resume. See
 nothing else. AI-written resume bullets tend to drift toward whatever the
 posting asks for, and you're the one who has to answer for every line in
 an interview. Tailoring is mostly choosing and ordering anyway.
-TODO(Jared): one or two sentences on why you built it this way, from your
-own job search.
+I built this for my own internship search, where I apply to a lot of
+roles. I had already cut C++, REST APIs and Tableau from my resume when I
+couldn't back them up in an interview, and I wanted tailoring that could
+never quietly add claims like those back.
 
 **Verbatim validation.** A reframe may reorder clauses, swap the leading
 verb from a short list, or trim. The build rejects any word whose stem
@@ -147,8 +149,12 @@ It also fixes a Times New Roman quirk: the font shares one glyph between
 `;` and the Greek question mark (U+037E), and XeTeX labels it as the Greek
 character, so every semicolon would reach the ATS as a stray symbol. The
 build relabels it in the PDF.
-TODO(Jared): if you tested with a specific resume parser, say which and
-what it caught.
+I tested the output by checking each PDF's extracted text and by running
+it through Affinda's resume parser. That caught two problems this layout
+now avoids. In some parsers, words ran together because the PDF had no real
+space characters. And Affinda filed a job title that started with a term
+label as a certification instead of a job, so keep labels like that at the
+end of a title, in parentheses.
 
 **TeX Gyre Termes instead of bundled fonts.** Times New Roman's license
 doesn't allow redistributing the font files, so the default is TeX Gyre
