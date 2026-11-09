@@ -1,0 +1,12 @@
+% master_${variant}.tex -- rendered from profile.yaml by scripts/render_masters.py.
+% Don't edit this file: change profile.yaml (or bullets.md / skills.md) and re-render.
+% Lines starting "% @" are the defaults the build uses when a plan leaves them out.
+${defaults}
+\documentclass[${font}]{resume}
+\hypersetup{pdftitle={${title}}, pdfauthor={${author}}}
+\begin{document}
+\rName{${name}}
+\rContact{${contact}}
+
+${sections}
+\end{document}
