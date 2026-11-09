@@ -1,0 +1,91 @@
+# profile.yaml: everything on the resume that isn't a bullet or a skill.
+# Alex Rivera is a made-up person. Setup writes your own copy to user/profile.yaml.
+
+name: Alex Rivera
+
+# Rendered in this order, separated by " | ". A label with no url is plain text.
+# The cover letter skips a plain location; add `letter: false` to skip others.
+contact:
+  - {label: linkedin.com/in/alexrivera, url: "https://www.linkedin.com/in/alexrivera/"}
+  - {label: alex.rivera@example.com, url: "mailto:alex.rivera@example.com"}
+  - {label: github.com/alexrivera, url: "https://github.com/alexrivera"}
+  - {label: "(555) 010-0000"}
+  - {label: "Oakland, CA"}
+
+# One entry per school, most recent first. The first entry's graduation is the
+# one the build checks for; alt_graduations lets a plan pick another date
+# (for example a later date for a co-op that pushes graduation back).
+education:
+  - school: State University
+    degree: "Bachelor's Degree in Computer Science; Minor in Statistics"
+    graduation: May 2027
+    graduation_prefix: "Expected Graduation:"
+    alt_graduations: ["December 2027"]
+    coursework: [Data Structures, Algorithms, Operating Systems, Databases, Machine Learning]
+
+# termes (free, ships with TeX Live / MacTeX) or times-system (Times New Roman
+# installed on your computer).
+font: termes
+
+# Optional: one or more Google Docs that hold your master resume. Leave empty
+# unless you want the skill to check them for edits before tailoring.
+drive_masters: []
+
+# Variants are the base resumes you tailor from. Each lists its section order,
+# the experience entries it shows (with default bullet IDs from bullets.md),
+# default projects, and default skills lines.
+variants:
+  swe:
+    label: Software engineering
+    use_for: "SWE, backend, full-stack, mobile, data engineering"
+    section_order: [education, experience, projects, skills]
+    experience:
+      - slot: acme
+        title: Software Engineering Intern
+        dates: "June 2026 -- August 2026"
+        org: Acme Corp
+        org_url: ""
+        location: "San Jose, CA"
+        default_bullets: [acme-1, acme-2, acme-3, acme-4, acme-5]
+      - slot: northwind
+        title: Undergraduate Research Assistant
+        dates: "January 2026 -- Present"
+        org: "Northwind Labs, State University"
+        org_url: ""
+        location: "Oakland, CA"
+        default_bullets: [northwind-1, northwind-2, northwind-3, northwind-4]
+    default_projects:
+      proj-chat: [chat-1, chat-2, chat-4, chat-3]
+      proj-kv: [kv-1, kv-3, kv-2]
+      proj-plant: [plant-1, plant-2, plant-4, plant-3]
+    default_skills:
+      Languages: [Python, Java, TypeScript, SQL, C]
+      Frameworks & Tools: [React, Node.js, PostgreSQL, Redis, Docker, Git, pytest]
+      Concepts: [REST APIs, Distributed Systems, Unit Testing, CI/CD]
+  ml:
+    label: Machine learning / data
+    use_for: "ML engineer, applied AI, data science, research"
+    section_order: [education, skills, experience, projects]
+    experience:
+      - slot: northwind
+        title: Undergraduate Research Assistant
+        dates: "January 2026 -- Present"
+        org: "Northwind Labs, State University"
+        org_url: ""
+        location: "Oakland, CA"
+        default_bullets: [northwind-1, northwind-3, northwind-2, northwind-4]
+      - slot: acme
+        title: Software Engineering Intern
+        dates: "June 2026 -- August 2026"
+        org: Acme Corp
+        org_url: ""
+        location: "San Jose, CA"
+        default_bullets: [acme-1, acme-4, acme-2, acme-3]
+    default_projects:
+      proj-plant: [plant-1, plant-4, plant-2, plant-3]
+      proj-chat: [chat-1, chat-2, chat-4, chat-3]
+      proj-kv: [kv-1, kv-3, kv-2]
+    default_skills:
+      Languages: [Python, SQL, Java, TypeScript]
+      Frameworks & Tools: [PyTorch, scikit-learn, Pandas, NumPy, Jupyter, Docker, Git]
+      Concepts: [Machine Learning, Computer Vision, Model Evaluation, Data Pipelines, A/B Testing]
