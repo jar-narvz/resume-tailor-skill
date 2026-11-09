@@ -1,0 +1,22 @@
+# Your personal library and working files never belong in the public repo
+user/
+resume-work/
+letter-work/
+_source/
+*.zip
+
+# Build output, except the committed example
+*.pdf
+!examples/sample-output.pdf
+*.aux
+*.log
+*.out
+examples/masters/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS
+.DS_Store
