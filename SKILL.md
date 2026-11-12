@@ -17,9 +17,8 @@ absolute paths in commands (shell variables don't carry between calls).
 
 Everything below runs scripts. If you can't run commands (code execution
 is off, or this is an incognito chat with no workspace), say in one line
-that this skill needs code execution, tell them to turn on "Code execution
-and file creation" in Settings → Capabilities and start a new chat, and
-stop. Don't offer a text-only version: none of the build's checks would
+that this skill needs code execution, tell them to turn on "Create and edit
+files" in Settings → Capabilities and start a new chat, and stop. Don't offer a text-only version: none of the build's checks would
 run, so nothing would stop a padded skill or a two-page resume.
 
 ## Setup mode comes first

@@ -2,13 +2,11 @@
 
 ## Current state
 
-Step 3 (keep the library in a Claude Project) is implemented by Codex;
-all automated Verify commands pass. Review by Claude and the by-hand
-Claude app check (a new Project chat tailors without setup and reports
-`"library": "/mnt/project"`) are pending. Steps 1 and 2 were reviewed and
-verified by Claude on 2026-11-12. Step 2 code was not changed in Step 3.
-Setup, polish-with-approval, packaging and tailoring were tested by hand
-in the Claude app on 2026-11-12.
+Steps 1–3 are done: implemented by Codex, reviewed and verified by Claude
+on 2026-11-12, including the by-hand Claude app check for step 3 (a
+Project chat tailored with no setup and reported `"library":
+"/mnt/project"`). Next: step 4 (automated tests and CI), which needs
+planning detail first.
 
 ## Log
 
@@ -28,8 +26,15 @@ in the Claude app on 2026-11-12.
   instructions (code keeps it). (2) Step 8 said to start from a fresh
   working copy but ran only `mkdir -p`, so a stale `archive.md` could
   survive; now `rm -rf resume-work/user` first.
-- **Gotchas:** The by-hand Claude app check (tailor in the Project with no
-  setup; summary `"library"` is `/mnt/project`) is still pending.
+- **Gotchas:** By-hand Claude app check done later the same day (Claude
+  drove the built-in browser; free account): uploaded the new zip, then in
+  the `tailor-resume` Project with Jordan's four files in Context, a new
+  chat tailored a Tesla posting with no setup. Summary: `"library":
+  "/mnt/project"`, `"pages": 1`, `"fails": []`, one warn (72% fill, all
+  bullets used). Found the docs named the wrong place for skills: it's
+  Customize → Skills → Add → Upload skill (same-name upload replaces in
+  place), and the code-execution toggle is labeled "Create and edit
+  files". Fixed in README.md, SKILL.md, references/setup.md.
 
 ### 2026-11-12 — Step 3 — Codex
 - **Did:** Added lookup order explicit > Project > user > examples, with

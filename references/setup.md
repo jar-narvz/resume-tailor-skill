@@ -233,8 +233,8 @@ isn't saved to a Project or packaged is gone when the chat ends.
   ```
 
   For the zip option, send them the zip it prints, and tell them: in
-  Claude, open the skills settings, upload this zip as a skill, and turn
-  off (or delete) the public `resume-tailor` skill so the two don't both trigger. From then
+  Claude, open Customize → Skills → Add → Upload skill, upload this zip. It has
+  the same name, so it replaces the public `resume-tailor` in place. From then
   on their library loads automatically in every chat.
 
 ## 8. Later edits

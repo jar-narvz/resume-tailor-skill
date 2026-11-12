@@ -22,11 +22,13 @@ cd resume-tailor-skill
 python3 scripts/package_skill.py --no-library --out .
 ```
 
-Then, in Claude's **Settings → Capabilities**:
+Then, in Claude:
 
-1. Turn on **Code execution and file creation**. The skill runs scripts
-   and stops without it.
-2. Under **Skills**, upload the `resume-tailor.zip` it created.
+1. **Settings → Capabilities:** turn on **Create and edit files** (code
+   execution). The skill runs scripts and stops without it.
+2. **Customize → Skills → Add → Upload skill:** upload the
+   `resume-tailor.zip` it created. Uploading a newer zip later replaces
+   the skill in place.
 3. If you have another resume skill turned on, turn it off so the two
    don't compete.
 
@@ -83,9 +85,9 @@ Your library never leaves your machine or your Claude account, and
   To update your library, replace only the changed files in Context.
   The files are available only inside that Project.
 - **Claude app, personal zip:** setup can instead pack the skill and your
-  library into `resume-tailor-<your-name>.zip`. Upload it under **Settings
-  → Capabilities → Skills** and turn off (or delete) the public
-  `resume-tailor`. Your library then loads in every chat; later changes
+  library into `resume-tailor-<your-name>.zip`. Upload it under **Customize →
+  Skills → Add → Upload skill**, which replaces the public
+  `resume-tailor` in place. Your library then loads in every chat; later changes
   mean uploading a new zip. Chat uploads and working files are temporary,
   so save your library through one of these two options.
 
