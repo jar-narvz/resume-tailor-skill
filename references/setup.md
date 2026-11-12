@@ -70,10 +70,14 @@ Merge across sources:
     **skills**, go to `archive.md`.
   - **A whole project** goes in `bullets.md` with no variant showing it
     by default. A plan can swap it in when a posting fits.
-  - **A whole position** can't be archived: a plan can't add a position,
-    so it only appears if a variant shows it. If it fits a different kind
-    of role, propose a variant that includes it (step 3); otherwise leave
-    it out. Either way, say which in step 6.
+  - **A whole position** that no variant shows goes in the top-level
+    `extra_experience` list in `profile.yaml`, with the same keys as a
+    variant's experience entry (`slot`, `title`, `dates`, `org`, `org_url`,
+    `location`, `default_bullets`). Put its bullets in `bullets.md`, with
+    IDs prefixed by its slot. A plan can append it with `add_experience`
+    when a posting fits; no separate variant is needed. Extra slots must
+    be unique and absent from all variants, and archive bullets cannot
+    be defaults. Say which positions are available off by default in step 6.
 
 Extraction is exact: don't fix grammar, add metrics, or merge two bullets
 into one here. Typos and weak wording get handled in step 4, where the
@@ -196,7 +200,7 @@ Then send the PDFs with a short summary of the library:
 - the variants you made and what each is for (if their sources had two
   versions and you made one variant, say why);
 - what went to `archive.md`, which older projects are in the library
-  but off by default, and any older position left out (and why), so they
+  but off by default, and older positions kept in `extra_experience`, so they
   know what's available when a posting fits.
 
 Ask them to check the PDFs: every bullet theirs, as written or as they
@@ -234,8 +238,9 @@ a new job":
   rules: their facts only, ask for numbers that would help, and nothing
   goes in until they approve it. Never edit or delete an existing ID; a reworded
   bullet is a new ID next to the old one.
-- A new skill goes in `skills.md`. A new position needs a slot in each
-  variant that should show it, plus its `## Position` section.
+- A new skill goes in `skills.md`. A new position needs an experience
+  entry in each variant that should show it by default, or one entry in
+  `extra_experience` if none should, plus its bullets in `bullets.md`.
 - Run `validate_library.py`, rebuild a base to confirm, and in the Claude
   app re-run `package_skill.py` and have them upload the new zip
   (replacing the old one).

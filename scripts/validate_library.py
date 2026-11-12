@@ -16,7 +16,8 @@ Checks
   - bullet and project IDs are unique (across bullets.md and archive.md)
   - every default bullet ID exists and belongs to its slot or project
   - every default project exists in bullets.md
-  - every experience bullet's ID prefix matches a slot in some variant
+  - extra_experience entries have valid defaults and unique slots outside variants
+  - every experience bullet's ID prefix matches a variant or extra_experience slot
   - skills.md has at least one category and no empty categories
   - every bullet has text
 """
@@ -61,6 +62,23 @@ def check(library):
     if not variants:
         problems.append("profile.yaml: define at least one variant under 'variants'")
 
+    def check_experience(x, where):
+        for key in ("slot", "title", "dates", "org"):
+            if not x.get(key):
+                problems.append(f"{where} is missing '{key}'")
+        slot = x.get("slot")
+        ids = x.get("default_bullets") or []
+        if not ids:
+            problems.append(f"{where} ({slot}) has no default_bullets")
+        for b in ids:
+            if b not in bullets:
+                problems.append(f"{where}: default bullet {b!r} for slot {slot!r} is not in bullets.md")
+            elif bullets[b]["group"] != slot:
+                problems.append(f"{where}: default bullet {b!r} belongs to {bullets[b]['group']!r}, "
+                                f"not slot {slot!r} (an experience bullet's ID prefix must be its slot)")
+            elif bullets[b].get("archive"):
+                problems.append(f"{where}: {b!r} is an archive bullet; archive bullets can't be defaults")
+
     all_slots = set()
     for vid, v in variants.items():
         where = f"profile.yaml: variants.{vid}"
@@ -72,22 +90,8 @@ def check(library):
             if order and s not in order:
                 problems.append(f"{where}.section_order leaves out '{s}'")
         for j, x in enumerate(v.get("experience") or []):
-            for key in ("slot", "title", "dates", "org"):
-                if not x.get(key):
-                    problems.append(f"{where}.experience[{j}] is missing '{key}'")
-            slot = x.get("slot")
-            all_slots.add(slot)
-            ids = x.get("default_bullets") or []
-            if not ids:
-                problems.append(f"{where}.experience[{j}] ({slot}) has no default_bullets")
-            for b in ids:
-                if b not in bullets:
-                    problems.append(f"{where}: default bullet {b!r} for slot {slot!r} is not in bullets.md")
-                elif bullets[b]["group"] != slot:
-                    problems.append(f"{where}: default bullet {b!r} belongs to {bullets[b]['group']!r}, "
-                                    f"not slot {slot!r} (an experience bullet's ID prefix must be its slot)")
-                elif bullets[b].get("archive"):
-                    problems.append(f"{where}: {b!r} is an archive bullet; archive bullets can't be defaults")
+            all_slots.add(x.get("slot"))
+            check_experience(x, f"{where}.experience[{j}]")
         for pid, ids in (v.get("default_projects") or {}).items():
             if pid not in projects:
                 problems.append(f"{where}.default_projects: project {pid!r} is not in bullets.md")
@@ -102,11 +106,23 @@ def check(library):
             if not items:
                 problems.append(f"{where}.default_skills.{label} is empty")
 
+    extra_slots = set()
+    for j, x in enumerate(p.get("extra_experience") or []):
+        where = f"profile.yaml: extra_experience[{j}]"
+        slot = x.get("slot")
+        if slot in extra_slots:
+            problems.append(f"{where}: duplicate extra_experience slot {slot!r}")
+        if slot in all_slots:
+            problems.append(f"{where}: slot {slot!r} is also in a variant")
+        extra_slots.add(slot)
+        check_experience(x, where)
+    all_slots.update(extra_slots)
+
     # bullets
     for slot in groups:
         if slot not in all_slots:
             problems.append(f"bullets.md: experience bullets {groups[slot][:3]} have prefix {slot!r}, "
-                            f"which isn't a slot in any variant (slots: {sorted(all_slots)})")
+                            f"which isn't a variant or extra_experience slot (slots: {sorted(all_slots, key=str)})")
     for bid, b in bullets.items():
         if not b["text"]:
             problems.append(f"bullet {bid!r} has no text")

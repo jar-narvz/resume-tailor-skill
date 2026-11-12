@@ -146,7 +146,7 @@ Your library is four plain-text files:
 
 | File | Holds |
 |---|---|
-| `profile.yaml` | Header, education, font, and your **variants**: base resumes with a section order, experience entries, and default bullets, projects and skills |
+| `profile.yaml` | Header, education, font, optional `extra_experience` positions, and your **variants**: base resumes with a section order, experience entries, and default bullets, projects and skills |
 | `bullets.md` | Every bullet, each with a stable ID (`acme-3`) |
 | `skills.md` | Every skill you can speak to |
 | `archive.md` | Content from older resumes, usable but never a default |
@@ -231,13 +231,12 @@ there's no hand-maintained LaTeX to get out of sync.
 - **Read-only install:** two builds in a row from a skill folder with no
   write permission.
 
-These were manual runs. There's no automated test suite yet.
+These were manual runs. Automated tests so far cover adding an older
+position (`python3 -m unittest discover -s tests`); a full suite is
+planned.
 
 ## Limitations
 
-- **Old positions need a variant.** A tailoring plan can't add a job
-  that its base resume doesn't show, so a position that's only on an
-  older resume is usable only if some variant includes it.
 - **Claude app: re-upload to update.** The app can't save files between
   chats, so your library lives inside the skill zip, and every change to
   it means uploading a new zip.

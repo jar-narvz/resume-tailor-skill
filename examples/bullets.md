@@ -44,6 +44,12 @@ Evaluate models with per-class precision and recall and a held-out farm split, a
 ### northwind-4  [research, writing, collaboration]
 Co-wrote a 4-page workshop paper draft on low-cost crop disease detection with a PhD mentor.
 
+### harbor-1  [sql, reporting, data]
+Built weekly SQL reports on delivery delays for a 6-person operations team, replacing a spreadsheet they updated by hand.
+
+### harbor-2  [python, data-quality]
+Wrote Python checks that flag missing and duplicate shipment records, catching about 400 bad rows in the first month.
+
 ## Projects
 
 ### project:proj-chat — Campus Chat (React, Node.js, Redis), Spring 2026  [swe, ml]

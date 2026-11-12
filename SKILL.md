@@ -45,7 +45,7 @@ Before anything else, check for `SKILL_DIR/user/profile.yaml`.
 
 | Path | What it is |
 |---|---|
-| `user/profile.yaml` | Header, education, font, and the **variants** (base resumes): section order, experience entries, default bullets, projects and skills |
+| `user/profile.yaml` | Header, education, font, optional `extra_experience` positions, and the **variants** (base resumes): section order, experience entries, default bullets, projects and skills |
 | `user/bullets.md` | Every bullet the user may put on a resume, each with a stable ID |
 | `user/skills.md` | Every skill the user can speak to, by category |
 | `user/archive.md` | Bullets and skills from older resumes. Usable by ID, never a default |
@@ -165,6 +165,7 @@ Write `resume-work/plan.json` in the working directory (see
     {"id": "proj-kv", "bullets": ["kv-1", "kv-2", "kv-3"]},
     {"id": "proj-chat"}
   ],
+  "add_experience": [],
   "experience": {
     "acme": [{"reframe_of": "acme-1", "text": "Built a Python service that batches inventory updates into PostgreSQL from 40+ warehouses, cutting nightly sync time from 3 hours to 25 minutes."},
              "acme-2", "acme-4"]
@@ -178,8 +179,16 @@ Write `resume-work/plan.json` in the working directory (see
 - `projects` replaces the whole list, so include every project you want,
   in order. Any project can go on any variant.
 - `"demo": false` on a project drops its "live demo" header link.
+- `add_experience` is an optional list of unique slot strings, for example
+  `"add_experience": ["harbor"]`. It appends positions after the base's own
+  positions, in list order. Lookup checks `extra_experience` first, then
+  variants in profile order; the first match supplies the header and
+  `default_bullets`. The base's section order must include experience.
 - `experience` refills a slot (the `slot` names in `profile.yaml`) with
-  other bullets from the same position.
+  other bullets from the same position. It may name only base positions
+  or slots explicitly requested in `add_experience`; an empty bullet list
+  fails. Additions cannot duplicate a slot or name one already on the base.
+  A plan cannot remove or reorder base positions or edit their header facts.
 - `"graduation": "<date>"` picks one of `education[0].alt_graduations`.
 - Skill items may use the posting's casing; matching ignores case and
   punctuation.
@@ -242,6 +251,7 @@ First, three or four lines:
 - Which variant you started from and why.
 - The two or three most consequential changes (project order, skills
   order, any reframe).
+- Any added position (the summary's `added_experience`); skip if empty.
 - Anything from the archive (the summary's `archive_used`), so they can
   confirm it's still accurate. Skip this line if it's empty.
 - **Gaps:** posting keywords they do **not** cover, stated plainly. These

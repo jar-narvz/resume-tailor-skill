@@ -31,6 +31,16 @@ font: termes
 # unless you want the skill to check them for edits before tailoring.
 drive_masters: []
 
+# Optional positions no variant shows by default. A plan can add one by slot.
+extra_experience:
+  - slot: harbor
+    title: Data Analyst Intern
+    dates: "June 2025 -- August 2025"
+    org: Harbor Analytics
+    org_url: ""
+    location: "Oakland, CA"
+    default_bullets: [harbor-1, harbor-2]
+
 # Variants are the base resumes you tailor from. Each lists its section order,
 # the experience entries it shows (with default bullet IDs from bullets.md),
 # default projects, and default skills lines.

@@ -27,13 +27,18 @@ Plan shape (every key except "variant" is optional):
   "projects": [{"id": "proj-chat",
                 "bullets": ["chat-1", {"reframe_of": "chat-2", "text": "..."}],
                 "demo": false}, ...],
+  "add_experience": ["harbor"],           (slots from the pool or another variant)
   "experience": {"acme": ["acme-3", "acme-1"]},
   "graduation": "December 2027"           (one of education[0].alt_graduations)
 }
 Omitted skills/projects/experience fall back to the variant's defaults.
+add_experience appends positions in list order, looking in extra_experience
+first, then variants in profile order. The first match supplies the header
+and default bullets; experience can override those bullets by slot.
 """
 
 import argparse
+import copy
 import json
 import os
 import re
@@ -44,7 +49,7 @@ import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from library import (ASSETS, email_of, esc, esc_text, esc_url, find_library,  # noqa: E402,F401
+from library import (ASSETS, SECTIONS, email_of, esc, esc_text, esc_url, find_library,  # noqa: E402,F401
                      graduations, load_library, norm, split_items)
 from render_masters import render  # noqa: E402
 
@@ -147,7 +152,32 @@ def resolve(plan, library):
     if graduation not in allowed_grads:
         return None, [f"unknown graduation {graduation!r}; profile.yaml allows {allowed_grads} "
                       f"(add it to education[0].alt_graduations)"], []
-    src = render(profile, variant, graduation)
+    additions = plan.get("add_experience", [])
+    if not isinstance(additions, list) or any(not isinstance(s, str) for s in additions) \
+            or len(additions) != len(set(additions)):
+        return None, ["add_experience must be a list of unique strings"], []
+    base = variants[variant]
+    if additions and "experience" not in (base.get("section_order") or SECTIONS):
+        return None, [f"variant {variant!r}: section_order has no experience section"], []
+    existing = {x.get("slot") for x in base.get("experience") or []}
+    pool = list(profile.get("extra_experience") or [])
+    pool += [x for v in variants.values() for x in v.get("experience") or []]
+    added = []
+    for slot in additions:
+        if slot in existing:
+            fails.append(f"add_experience: slot {slot!r} is already in variant {variant!r}")
+            continue
+        entry = next((x for x in pool if x.get("slot") == slot), None)
+        if entry is None:
+            fails.append(f"add_experience: unknown experience slot {slot!r}")
+        else:
+            added.append(entry)
+    if fails:
+        return None, fails, warns
+    effective = copy.deepcopy(base)
+    effective["experience"] = list(effective.get("experience") or []) + copy.deepcopy(added)
+    effective_profile = {**profile, "variants": {**variants, variant: effective}}
+    src = render(effective_profile, variant, graduation)
     d_skills, d_projects, d_slots = parse_master(src)
     other_defaults = [parse_master(render(profile, v))[1] for v in variants if v != variant]
     inventory = skill_inventory(lib)
@@ -242,7 +272,7 @@ def resolve(plan, library):
                      if norm(x) in archive_skill_items and norm(x) not in current]
     resolved = {"variant": variant, "src": src, "skills": out_skills,
                 "projects": out_projects, "slots": out_slots, "reframes": n_reframes,
-                "archive_used": archive_used, "graduation": graduation,
+                "archive_used": archive_used, "added_experience": additions, "graduation": graduation,
                 "name": profile.get("name", ""), "email": email_of(profile)}
     return resolved, fails, warns
 
@@ -398,7 +428,8 @@ def cmd_build(args):
     os.makedirs(args.outdir, exist_ok=True)
     r, fails, warns = resolve(plan, args.library)
     summary = {"library": args.library, "variant": plan.get("variant"),
-               "graduation": r["graduation"] if r else plan.get("graduation")}
+               "graduation": r["graduation"] if r else plan.get("graduation"),
+               "added_experience": r["added_experience"] if r else []}
     if r is None or fails:
         summary.update(fails=fails, warns=warns)
         print(json.dumps(summary, indent=1))

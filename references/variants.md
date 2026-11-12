@@ -19,7 +19,32 @@ Defined under `variants:` in `profile.yaml`:
 
 Per posting, a plan can swap bullets, reorder and swap projects, rewrite
 the skills lines (from the inventory), and pick an alternate graduation
-date. It can't add a position, move sections, or change the header.
+date. It can append positions with `add_experience`; it can't remove or
+reorder the base's positions, move sections, or change header facts.
+
+## Adding a position for one posting
+
+`profile.yaml` may have a top-level `extra_experience` list for positions
+no variant shows by default. Each entry uses the same keys as a variant's
+experience entry: `slot`, `title`, `dates`, `org`, optional `org_url` and
+`location`, and `default_bullets`. Its bullets live in `bullets.md`, with
+the slot as their ID prefix. Extra slots must be unique and cannot also
+appear in any variant; a slot shared by several variants remains legal.
+Archive bullets cannot be defaults.
+
+A plan can use `"add_experience": ["harbor"]` to append that position, or
+one shown only on another variant. Additions follow the base's positions
+in list order. Lookup checks `extra_experience` first, then variants in
+profile order; the first match supplies both the header and defaults.
+`"experience": {"harbor": ["harbor-2"]}` overrides its bullets. Without
+that override, its `default_bullets` are used. Every added position needs
+at least one bullet from its own slot, and the base's effective section
+order (all sections when omitted) must include experience.
+
+`add_experience` must be a list of unique strings. Unknown slots, slots
+already on the base, and an `experience` override for a slot neither on
+the base nor in `add_experience` fail. Mention added positions from the
+build summary's `added_experience` list when delivering the resume.
 
 ## Picking a variant (step 2)
 
