@@ -4,7 +4,8 @@
 
 Step 1 (plan can add an older position) is done: implemented by Codex,
 reviewed and verified by Claude on 2026-11-12. Next: step 2 (clean header
-in the tailored .tex).
+in the tailored .tex), then step 3 (library in a Claude Project; the
+`/mnt/project` test passed by hand on 2026-11-12).
 Setup, polish-with-approval, packaging and tailoring were tested by hand
 in the Claude app on 2026-11-12.
 

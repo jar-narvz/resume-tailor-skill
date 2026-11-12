@@ -122,16 +122,74 @@ users receive. Replace it with one line naming the company, role and
 build date. Verify: sample build's `.tex` first line no longer mentions
 `master_` or "Don't edit"; output PDF unchanged.
 
-### Step 3 — Automated tests and CI
+### Step 3 — Keep the library in a Claude Project (app alternative to the zip)
+
+**Need.** In the Claude app, every library change means re-uploading the
+whole skill zip. Users who tailor in one place want to update their
+library by replacing a file.
+
+**Evidence (2026-11-12, free account).** Four library files added to a
+Project's Context appear in every chat in that Project as real, read-only
+files in `/mnt/project/` (flat, original names, byte sizes identical to
+the source files). The installed skill sits at
+`/mnt/skills/plugins/resume-tailor`. Chat uploads go to
+`/mnt/user-data/uploads` and don't persist.
+
+**Design.**
+
+- **Lookup in code, not just instructions.** `library.find_library()`
+  becomes: explicit `--library` > `/mnt/project` (if it has
+  `profile.yaml`) > `user/` in the skill folder > `examples/` (warning).
+  *Why code:* every script then finds the Project library with no flag,
+  the same way it finds `user/`, and the JSON summary's `"library"` shows
+  which one was used. *Why the Project first:* opening a chat inside that
+  Project is a deliberate, per-chat choice, and its files are the ones the
+  user edits. If both exist, print a one-line warning naming both. The
+  Project path is a module constant overridable by an environment
+  variable (`RESUME_TAILOR_PROJECT_DIR`) so tests can point it at a temp
+  dir.
+- **SKILL.md setup gate** checks both places (`user/profile.yaml` or
+  `/mnt/project/profile.yaml`) before deciding setup is needed.
+- **Setup step 7 (Claude app)** offers both: (a) **Project**: send the four
+  files to download and say "add these to your Project's Context, then
+  tailor in chats inside that Project"; (b) **zip**: as now, works in every
+  chat. One line each on the trade-off; recommend the Project if they
+  tailor in one place.
+- **Step 8 (later edits):** Project users get only the changed file(s) to
+  replace in Context; zip users get a new zip, as now.
+- **README:** "Where your library lives" gets the Project option and the
+  trade-off; Limitations line updated.
+
+**Non-goals.** Writing to `/mnt/project` (it's read-only); syncing a
+Project library with a zip library; Project instructions text.
+
+**Files.** `scripts/library.py`, `tests/test_find_library.py` (new),
+`SKILL.md`, `references/setup.md`, `README.md`.
+
+**Verify.**
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/build_resume.py --library examples build examples/sample-plan.json out/v3
+```
+Expected: all tests pass, including new ones for the lookup order
+(Project dir used when it has `profile.yaml`; `user/` when it doesn't;
+explicit `--library` wins over both; warning when both exist); sample
+build unchanged (`"fails": []`, `"pages": 1`, `"bullets_used": 19`).
+Then by hand in the Claude app: in the test Project, a new chat tailors
+to a posting without running setup, and the summary's `"library"` is
+`/mnt/project`.
+
+### Step 4 — Automated tests and CI
 
 pytest suite: reframe rules (number changed, new word stem, >3 words
 added, allowed verb swap), plan validation (unknown ID, wrong slot, skill
 not in inventory, `add_experience` failures), and an end-to-end sample
 build (one page, no fails, every bullet recoverable from the PDF text).
 GitHub Actions installs TeX Live + poppler and runs it; README gets the
-badge. Details to be planned when step 2 is done.
+badge. Details to be planned when step 3 is done.
 
-### Step 4 — Publish
+### Step 5 — Publish
 
 README pass (mention tests), repo description and topics, make public,
 optional v1.0 release with the zip attached.
