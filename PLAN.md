@@ -116,11 +116,43 @@ sample build `"fails": []`, `"pages": 1`, `"bullets_used": 19`.
 
 ### Step 2 — Clean header in the tailored .tex
 
-The tailored `.tex` starts with the master template's comment
-("master_swe.tex … Don't edit this file"), which is wrong for a file
-users receive. Replace it with one line naming the company, role and
-build date. Verify: sample build's `.tex` first line no longer mentions
-`master_` or "Don't edit"; output PDF unchanged.
+**Need.** The tailored `.tex` users receive starts with the master
+template's comment ("master_swe.tex … Don't edit this file"). It names the
+wrong file, and editing a delivered `.tex` is fine.
+
+**Design.** `compose()` in `build_resume.py` drops the master's leading
+`%` comment lines and starts the file with one line:
+`% <Name> resume, tailored for <Company> (<Role>), built <YYYY-MM-DD> by resume-tailor`,
+or for `build --variant` (no company): `% <Name> resume, <variant> base, built <YYYY-MM-DD> by resume-tailor`.
+Masters written by `render_masters.py` keep their current header (they
+are masters). Only comments change, so the PDF text is identical.
+
+- `resolve()` carries the plan's `company` and `role` into the resolved
+  dict; `compose()` builds the line from it. Both are optional: company
+  and role → "tailored for Acme (Intern)"; one of them → "tailored for
+  Acme" / "tailored for Intern"; neither (or `--variant`) → the base line.
+- Collapse all whitespace (including CR/LF) in interpolated values to
+  single spaces, so the header is always exactly one comment line.
+- The date comes from a parameter defaulting to today, so tests can pin
+  it.
+
+**Files.** `scripts/build_resume.py`, `tests/test_tex_header.py` (new).
+
+**Verify.**
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/build_resume.py --library examples build examples/sample-plan.json out/v2
+head -2 out/v2/tailored.tex
+for v in swe ml; do python3 scripts/build_resume.py --library examples build --variant $v out/after2-$v >/dev/null; diff <(grep -v '^%' out/baseline-$v/tailored.tex) <(grep -v '^%' out/after2-$v/tailored.tex) && echo "$v body unchanged"; done
+pdftotext out/v2/tailored.pdf - | diff out/baseline-sample/text.txt - && echo "sample text unchanged"
+```
+Expected: tests pass (new: all four company/role combinations and the
+variant line with a pinned date, CR/LF collapsed, no `master_` or "Don't
+edit"); `head` shows the new line naming Globex Logistics; `swe body
+unchanged`, `ml body unchanged`, `sample text unchanged` (baseline in
+`out/baseline-sample/text.txt`, built before the change); sample build
+`"fails": []`, `"pages": 1`, `"bullets_used": 19`.
 
 ### Step 3 — Keep the library in a Claude Project (app alternative to the zip)
 
@@ -148,6 +180,15 @@ the source files). The installed skill sits at
   Project path is a module constant overridable by an environment
   variable (`RESUME_TAILOR_PROJECT_DIR`) so tests can point it at a temp
   dir.
+- **Incomplete Project library.** If the Project dir has `profile.yaml`
+  but is missing `bullets.md` or `skills.md` (`archive.md` is optional),
+  stop with a clear error naming the missing files and saying to add them
+  to the Project's Context. Never fall back to another library or mix
+  sources silently.
+- **One library path everywhere in SKILL.md.** Define `LIBRARY` once
+  (`/mnt/project` when it has `profile.yaml`, else `SKILL_DIR/user`) and
+  use it for every file the instructions read (profile, bullets, skills,
+  archive), so Claude picks IDs from the same files the build uses.
 - **SKILL.md setup gate** checks both places (`user/profile.yaml` or
   `/mnt/project/profile.yaml`) before deciding setup is needed.
 - **Setup step 7 (Claude app)** offers both: (a) **Project**: send the four
@@ -155,8 +196,11 @@ the source files). The installed skill sits at
   tailor in chats inside that Project"; (b) **zip**: as now, works in every
   chat. One line each on the trade-off; recommend the Project if they
   tailor in one place.
-- **Step 8 (later edits):** Project users get only the changed file(s) to
-  replace in Context; zip users get a new zip, as now.
+- **Step 8 (later edits), Project users:** `/mnt/project` is read-only,
+  so copy it to `resume-work/user/`, edit there, run
+  `validate_library.py resume-work/user` and a base build with
+  `--library resume-work/user`, then send only the changed file(s) to
+  replace in Context. Zip users get a new zip, as now.
 - **README:** "Where your library lives" gets the Project option and the
   trade-off; Limitations line updated.
 
@@ -172,10 +216,13 @@ Project library with a zip library; Project instructions text.
 python3 -m unittest discover -s tests -v
 python3 scripts/build_resume.py --library examples build examples/sample-plan.json out/v3
 ```
-Expected: all tests pass, including new ones for the lookup order
-(Project dir used when it has `profile.yaml`; `user/` when it doesn't;
-explicit `--library` wins over both; warning when both exist); sample
-build unchanged (`"fails": []`, `"pages": 1`, `"bullets_used": 19`).
+Expected: all tests pass, including new ones for: lookup order (Project
+dir used when it has `profile.yaml`; `user/` when it doesn't; explicit
+`--library` wins over both; warning when both exist; `examples/` fallback
+with its warning); an incomplete Project dir fails with the missing file
+names; a build from a read-only Project dir (temp dir with write
+permission removed) succeeds and reports it as `"library"`. Sample build
+unchanged (`"fails": []`, `"pages": 1`, `"bullets_used": 19`).
 Then by hand in the Claude app: in the test Project, a new chat tailors
 to a posting without running setup, and the summary's `"library"` is
 `/mnt/project`.
@@ -221,3 +268,23 @@ optional v1.0 release with the zip attached.
 Test framework: stdlib `unittest` rather than installing pytest now,
 because pytest isn't installed and step 3 can run unittest tests
 unchanged.
+
+**2026-11-12, Steps 2 and 3, Codex critique (6 points).**
+
+1. Step 3 later edits need a writable copy (`/mnt/project` is read-only).
+   **Accepted:** step 8 copies to `resume-work/user/`, validates, and
+   sends back changed files.
+2. SKILL.md reads `user/...` paths directly, so Claude could pick IDs from
+   a different library than the build uses. **Accepted:** one `LIBRARY`
+   path used throughout.
+3. A partial Project upload would crash or shadow a working library.
+   **Accepted:** clear error naming missing files; no silent fallback.
+4. Newlines in company/role could escape the TeX comment. **Accepted:**
+   collapse whitespace.
+5. Step 2 didn't say how company/role reach `compose()` or handle missing
+   ones. **Accepted:** carried in the resolved dict; four combinations
+   specified; date pinnable for tests.
+6. Verify didn't prove unchanged PDF text or exercise Project lookup.
+   **Accepted:** step 2 diffs sample PDF text against a pre-change
+   baseline; step 3 tests cover fallback, incomplete and read-only
+   Project dirs.

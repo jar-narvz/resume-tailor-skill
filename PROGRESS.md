@@ -2,14 +2,165 @@
 
 ## Current state
 
-Step 1 (plan can add an older position) is done: implemented by Codex,
-reviewed and verified by Claude on 2026-11-12. Next: step 2 (clean header
-in the tailored .tex), then step 3 (library in a Claude Project; the
-`/mnt/project` test passed by hand on 2026-11-12).
+Step 3 (keep the library in a Claude Project) is implemented by Codex;
+all automated Verify commands pass. Review by Claude and the by-hand
+Claude app check (a new Project chat tailors without setup and reports
+`"library": "/mnt/project"`) are pending. Steps 1 and 2 were reviewed and
+verified by Claude on 2026-11-12. Step 2 code was not changed in Step 3.
 Setup, polish-with-approval, packaging and tailoring were tested by hand
 in the Claude app on 2026-11-12.
 
 ## Log
+
+### 2026-11-12 — Step 3 review — Claude
+- **Did:** Reviewed Codex's step 3 diff and reran Verify. Lookup order,
+  incomplete-Project error, single `LIBRARY` in SKILL.md, and the step 8
+  working copy match PLAN.md; only listed files touched (the
+  `build_resume.py` diff is step 2's, still uncommitted).
+- **Changed:** SKILL.md, references/setup.md
+- **Verify:** 32 tests OK. Sample build `"fails": []`, `"pages": 1`,
+  `"bullets_used": 19`. Extra check: Jordan's four library files in a
+  read-only temp dir via `RESUME_TAILOR_PROJECT_DIR`, `build --variant
+  swe` with no `--library`: `"library"` is that dir, `"pages": 1`,
+  `"fails": []`.
+- **Review:** Findings fixed: (1) SKILL.md and setup.md told Claude about
+  `RESUME_TAILOR_PROJECT_DIR`, a test-only knob; removed from user-facing
+  instructions (code keeps it). (2) Step 8 said to start from a fresh
+  working copy but ran only `mkdir -p`, so a stale `archive.md` could
+  survive; now `rm -rf resume-work/user` first.
+- **Gotchas:** The by-hand Claude app check (tailor in the Project with no
+  setup; summary `"library"` is `/mnt/project`) is still pending.
+
+### 2026-11-12 — Step 3 — Codex
+- **Did:** Added lookup order explicit > Project > user > examples, with
+  an environment override for the Project directory, a one-line warning
+  naming both libraries when the Project shadows user/, and a clear
+  incomplete-Project error naming missing files and Project Context.
+  Updated SKILL.md to use one LIBRARY path for all reads and builds and
+  check both profiles before setup. Documented Project vs. zip saving,
+  recommending Projects for tailoring in one place; later Project edits
+  use a fresh writable copy, explicit validation/builds, and delivery of
+  only changed files. Added 10 stdlib unittest tests covering lookup,
+  warnings, incomplete libraries, clean CLI failure, optional archive,
+  and a real build from a read-only temporary Project library.
+- **Changed:** scripts/library.py, tests/test_find_library.py (new),
+  SKILL.md, references/setup.md, README.md, PROGRESS.md.
+- **Verify:** Both automated Step 3 Verify commands exited 0. Actual
+  output below; unittest's per-test `... ok` lines are abbreviated.
+
+  ```text
+  $ python3 -m unittest discover -s tests -v
+  ----------------------------------------------------------------------
+  Ran 32 tests in 4.829s
+
+  OK
+
+  $ python3 scripts/build_resume.py --library examples build examples/sample-plan.json out/v3
+  {
+   "library": "examples",
+   "variant": "swe",
+   "graduation": "May 2027",
+   "added_experience": [],
+   "pdf": "out/v3/Alex_Rivera_Resume_Globex_Logistics_Backend_Software_Engineer_Intern.pdf",
+   "tex": "out/v3/Alex_Rivera_Resume_Globex_Logistics_Backend_Software_Engineer_Intern.tex",
+   "pdf_kb": 26.4,
+   "reframes": 1,
+   "archive_used": [],
+   "pages": 1,
+   "page_fill_pct": 100.3,
+   "bullets_used": 19,
+   "natural_fill_pct": 94.0,
+   "fails": [],
+   "warns": []
+  }
+  ```
+
+  Before implementation, the initial nine-test lookup suite failed with
+  seven failures: missing Project selection, shadow warning, incomplete
+  errors, and read-only build library selection. After implementation,
+  all 32 tests passed with no skips.
+- **Review:** pending Claude.
+- **Gotchas:** The by-hand Claude app check is still pending: a new chat
+  in the test Project must tailor without setup and report
+  `"library": "/mnt/project"`. All new tests set
+  RESUME_TAILOR_PROJECT_DIR to temporary directories; none access the
+  real /mnt path. Read-only test permissions are restored for cleanup;
+  later-edit instructions make copied files writable explicitly.
+  Existing PLAN.md and Step 2 changes were left untouched. No baseline
+  files were modified; the sample Verify generated only out/v3 output.
+  No dependencies added, and no git commit or push run.
+
+### 2026-11-12 — Step 2 review — Claude
+- **Did:** Reviewed Codex's step 2 diff (`compose()` header, company/role
+  carried in `resolve()`) and reran Verify. Matches PLAN.md; only listed
+  files touched. No findings.
+- **Changed:** PROGRESS.md
+- **Verify:** 22 tests OK. Sample `.tex` line 1: `% Alex Rivera resume,
+  tailored for Globex Logistics (Backend Software Engineer Intern), built
+  2026-11-12 by resume-tailor`. `swe body unchanged`, `ml body unchanged`,
+  `sample text unchanged`. Sample build `"fails": []`, `"pages": 1`,
+  `"bullets_used": 19`.
+- **Review:** accepted. Note: `date | None` needs Python 3.10+.
+- **Gotchas:** none.
+
+### 2026-11-12 — Step 2 — Codex
+- **Did:** Carried company and role through `resolve()`. Replaced leading
+  master comments in `compose()` with a single tailored or base header,
+  collapsed whitespace in interpolated values, and added a pinnable build
+  date defaulting to today. Added stdlib unittest coverage for all four
+  company/role combinations, the variant base header, dates, CR/LF and
+  other whitespace, removal of master warnings, and preservation of body
+  comments. Stopped before step 3.
+- **Changed:** scripts/build_resume.py, tests/test_tex_header.py (new),
+  PROGRESS.md.
+- **Verify:** All five Step 2 commands exited 0. Actual output below;
+  unittest's per-test `... ok` lines are abbreviated.
+
+  ```text
+  $ python3 -m unittest discover -s tests -v
+  ----------------------------------------------------------------------
+  Ran 22 tests in 2.470s
+
+  OK
+
+  $ python3 scripts/build_resume.py --library examples build examples/sample-plan.json out/v2
+  {
+   "library": "examples",
+   "variant": "swe",
+   "graduation": "May 2027",
+   "added_experience": [],
+   "pdf": "out/v2/Alex_Rivera_Resume_Globex_Logistics_Backend_Software_Engineer_Intern.pdf",
+   "tex": "out/v2/Alex_Rivera_Resume_Globex_Logistics_Backend_Software_Engineer_Intern.tex",
+   "pdf_kb": 26.4,
+   "reframes": 1,
+   "archive_used": [],
+   "pages": 1,
+   "page_fill_pct": 100.3,
+   "bullets_used": 19,
+   "natural_fill_pct": 94.0,
+   "fails": [],
+   "warns": []
+  }
+
+  $ head -2 out/v2/tailored.tex
+  % Alex Rivera resume, tailored for Globex Logistics (Backend Software Engineer Intern), built 2026-11-12 by resume-tailor
+  \documentclass[termes]{resume}
+
+  $ for v in swe ml; do python3 scripts/build_resume.py --library examples build --variant $v out/after2-$v >/dev/null; diff <(grep -v '^%' out/baseline-$v/tailored.tex) <(grep -v '^%' out/after2-$v/tailored.tex) && echo "$v body unchanged"; done
+  swe body unchanged
+  ml body unchanged
+
+  $ pdftotext out/v2/tailored.pdf - | diff out/baseline-sample/text.txt - && echo "sample text unchanged"
+  sample text unchanged
+  ```
+
+  Before implementation, the first regression test failed on the old
+  `master_swe.tex` header. The expanded tests also exposed the missing
+  resolved company/role fields and build-date parameter.
+- **Review:** pending Claude.
+- **Gotchas:** PLAN.md already had a local modification when this step
+  began; it was left untouched. No baseline files were modified. Verify
+  generated outputs only in out/v2 and out/after2-{swe,ml}.
 
 ### 2026-11-12 — Step 1 review — Claude
 - **Did:** Reviewed Codex's step 1 diff and reran Verify. Design matches

@@ -1,9 +1,9 @@
 """Shared loaders for the resume library: profile.yaml, bullets.md,
 archive.md and skills.md, plus LaTeX escaping.
 
-A library is a folder holding those four files. The skill uses `user/`
-inside the skill folder (written by first-run setup) and falls back to
-`examples/` (Alex Rivera, a made-up person) with a warning.
+A library is a folder holding those files (archive.md is optional).
+The skill prefers the Claude Project library over `user/` inside the
+skill folder, then falls back to `examples/` with a warning.
 """
 
 import os
@@ -16,17 +16,29 @@ ASSETS = os.path.join(SKILL_DIR, "assets")
 TEMPLATES = os.path.join(SKILL_DIR, "templates")
 USER_DIR = os.path.join(SKILL_DIR, "user")
 EXAMPLES_DIR = os.path.join(SKILL_DIR, "examples")
+PROJECT_DIR = "/mnt/project"
 
 FONTS = ("termes", "times-system")
 SECTIONS = ("education", "experience", "projects", "skills")
 
 
 def find_library(explicit=None, quiet=False):
-    """Return the library folder: explicit > user/ > examples/ (with a warning)."""
+    """Return explicit > Project > user/ > examples/; warn on shadowing or demo use."""
     if explicit:
         if not os.path.exists(os.path.join(explicit, "profile.yaml")):
             raise SystemExit(f"no profile.yaml in {explicit}")
         return explicit
+    project = os.environ.get("RESUME_TAILOR_PROJECT_DIR", PROJECT_DIR)
+    if os.path.exists(os.path.join(project, "profile.yaml")):
+        missing = [name for name in ("bullets.md", "skills.md")
+                   if not os.path.isfile(os.path.join(project, name))]
+        if missing:
+            raise SystemExit(f"incomplete Project library in {project}: missing "
+                             f"{', '.join(missing)}. Add them to the Project's Context.")
+        if not quiet and os.path.exists(os.path.join(USER_DIR, "profile.yaml")):
+            print(f"WARNING: using Project library {project} instead of {USER_DIR}; "
+                  "both have profile.yaml.", file=sys.stderr)
+        return project
     if os.path.exists(os.path.join(USER_DIR, "profile.yaml")):
         return USER_DIR
     if not quiet:

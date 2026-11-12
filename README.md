@@ -30,9 +30,10 @@ Then, in Claude's **Settings → Capabilities**:
 3. If you have another resume skill turned on, turn it off so the two
    don't compete.
 
-Start a new chat (outside any Project) to use it. Saved preferences in
-your profile outrank a skill, so if yours say something like "edit my
-Google Doc resume," Claude may follow that instead.
+Start a new chat to use it; Project libraries are available inside their
+Project. Saved preferences in your profile outrank a skill, so if yours
+say something like "edit my Google Doc resume," Claude may follow that
+instead.
 
 **Claude Code.** Install the [requirements](#requirements) first
 (xelatex and poppler), then:
@@ -75,15 +76,24 @@ Your library never leaves your machine or your Claude account, and
 - **Claude Code:** the skill is a normal folder on your computer, so
   setup writes your library into `user/` there and every later run finds
   it. Nothing else to do.
-- **Claude app:** each chat gets a fresh, temporary workspace that's
-  erased when the chat ends, and Claude can read an installed skill but
-  can't change it. So a library built during setup would vanish with the
-  chat. Instead, setup packs the skill and your library into one zip
-  (`resume-tailor-<your-name>.zip`). Upload it under **Settings →
-  Capabilities → Skills** and turn off (or delete) the public
-  `resume-tailor`. From then on every new chat uses your library
-  automatically. When you add bullets later, Claude hands you a new zip
-  to upload the same way.
+- **Claude app, Project (recommended if you tailor in one place):**
+  setup sends four library files to download: `profile.yaml`, `bullets.md`,
+  `skills.md`, and `archive.md`. Add them to your **Project's Context**
+  and tailor in chats inside that Project, with the public skill enabled.
+  To update your library, replace only the changed files in Context.
+  The files are available only inside that Project.
+- **Claude app, personal zip:** setup can instead pack the skill and your
+  library into `resume-tailor-<your-name>.zip`. Upload it under **Settings
+  → Capabilities → Skills** and turn off (or delete) the public
+  `resume-tailor`. Your library then loads in every chat; later changes
+  mean uploading a new zip. Chat uploads and working files are temporary,
+  so save your library through one of these two options.
+
+If both a Project library and a personal zip library exist, the Project
+wins and the scripts warn which paths they found. They never sync the
+two. A Project with `profile.yaml` must also have `bullets.md` and
+`skills.md`; an incomplete upload stops with the missing filenames
+(`archive.md` is optional).
 
 ## Usage
 
@@ -237,9 +247,10 @@ planned.
 
 ## Limitations
 
-- **Claude app: re-upload to update.** The app can't save files between
-  chats, so your library lives inside the skill zip, and every change to
-  it means uploading a new zip.
+- **Claude app: update saved files manually.** Replace changed library
+  files in your Project's Context, or upload a new personal skill zip.
+  Project libraries work only in chats inside that Project; Project and
+  zip libraries aren't synced.
 - **One layout.** A single-column, Times-style resume. Changing the look
   means editing `assets/resume.cls`.
 - **LaTeX required.** The build needs xelatex, which is a large install

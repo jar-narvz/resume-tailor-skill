@@ -24,20 +24,31 @@ run, so nothing would stop a padded skill or a two-page resume.
 
 ## Setup mode comes first
 
-Before anything else, check for `SKILL_DIR/user/profile.yaml`.
+Before anything else, check for `/mnt/project/profile.yaml` and
+`SKILL_DIR/user/profile.yaml`. Define `LIBRARY` once: `/mnt/project` when
+it has `profile.yaml`, otherwise `SKILL_DIR/user`. Use that same path for
+all library reads and builds below.
 
-- **Missing:** this user hasn't set up their library yet. Tell them in one
-  line, then follow `references/setup.md` instead of tailoring. (If they
+If the Project has `profile.yaml` but lacks `bullets.md` or `skills.md`,
+stop and name the missing files: ask the user to add them to the Project's
+Context. `archive.md` is optional. Don't fall back or mix library files.
+
+- **Neither profile exists:** this user hasn't set up their library yet.
+  Tell them in one line, then follow `references/setup.md` instead of tailoring. (If they
   only want to see what the skill does, you can tailor with the demo
-  library in `examples/`, but say clearly that it's a made-up person.)
+  library by setting `LIBRARY` to `SKILL_DIR/examples`, but say clearly
+  that it's a made-up person.)
   Do this even when you could find their resume another way (memory,
   past chats, a connected Google Doc). Don't build a throwaway library
   and tailor in the same turn: setup is where the user checks their base
   resumes and gets a library that lasts. Those sources are fine as input
   to setup's step 1, and setup still runs through step 6 (show each base)
-  and step 7 (package). If they came with a posting, tailor it only after
-  step 7 has handed them their packaged library.
-- **Present:** tailor as below. The scripts find `user/` on their own.
+  and step 7 (save). If they came with a posting, tailor it only after
+  step 7 has handed them their library to save.
+  For tailoring in this setup chat, use the library directory setup wrote
+  as `LIBRARY` (`resume-work/user` in the app).
+- **Either profile exists:** tailor as below. The scripts prefer the
+  Project library over `user/` and warn when both exist.
 - **Asked to set up, re-import, or add content:** `references/setup.md`
   (step 8 covers later edits).
 
@@ -45,10 +56,10 @@ Before anything else, check for `SKILL_DIR/user/profile.yaml`.
 
 | Path | What it is |
 |---|---|
-| `user/profile.yaml` | Header, education, font, optional `extra_experience` positions, and the **variants** (base resumes): section order, experience entries, default bullets, projects and skills |
-| `user/bullets.md` | Every bullet the user may put on a resume, each with a stable ID |
-| `user/skills.md` | Every skill the user can speak to, by category |
-| `user/archive.md` | Bullets and skills from older resumes. Usable by ID, never a default |
+| `LIBRARY/profile.yaml` | Header, education, font, optional `extra_experience` positions, and the **variants** (base resumes): section order, experience entries, default bullets, projects and skills |
+| `LIBRARY/bullets.md` | Every bullet the user may put on a resume, each with a stable ID |
+| `LIBRARY/skills.md` | Every skill the user can speak to, by category |
+| `LIBRARY/archive.md` | Bullets and skills from older resumes. Usable by ID, never a default |
 | `examples/` | The same four files for Alex Rivera, a made-up person, plus a sample posting, plan and output |
 | `assets/resume.cls`, `assets/cover_letter.cls` | Layout: 10pt Times-style serif, 16pt name, 0.5in margins, embedded fonts, ATS-safe text layer |
 | `scripts/build_resume.py` | Validates a plan, composes the .tex, runs xelatex, and checks the PDF |
@@ -66,7 +77,7 @@ bullets, and any stronger wording was suggested and accepted during setup
 or a later edit (`references/setup.md` step 4), never during tailoring.
 Every bullet is a library or archive ID used verbatim, or a reframe of one,
 which may only reorder clauses, swap the leading verb, or trim. Every
-skill must already be in `skills.md`, `archive.md`, a variant's
+skill must already be in `LIBRARY/skills.md`, `LIBRARY/archive.md`, a variant's
 `default_skills`, or a bullet on the page. The build enforces all of this
 and fails loudly, on purpose. Fabricated bullets and padded skills are the
 main way resume tailoring goes wrong, and the user has to defend every
@@ -79,7 +90,7 @@ portal is a claim just like a resume line.
 
 ### 0. Optional: sync from a Google Doc master
 
-Skip this step unless `profile.yaml` has a non-empty `drive_masters` list
+Skip this step unless `LIBRARY/profile.yaml` has a non-empty `drive_masters` list
 (Google Doc IDs or titles the user edits as their master resume) and a
 Google Drive connector is available. Then, once per run:
 
@@ -135,13 +146,13 @@ Don't screen the user out on eligibility (graduation window, location,
 
 ### 2. Pick the variant and read the library
 
-Read `user/profile.yaml` and pick the variant whose `use_for` best
+Read `LIBRARY/profile.yaml` and pick the variant whose `use_for` best
 matches the posting (`references/variants.md` has the tie-breakers).
-Then read `user/bullets.md` end to end once; you'll pick bullets by ID
-from it. Read `user/skills.md` for the skill inventory.
+Then read `LIBRARY/bullets.md` end to end once; you'll pick bullets by ID
+from it. Read `LIBRARY/skills.md` for the skill inventory.
 
 Only if the posting asks for something the current bullets and skills
-don't cover well, read `user/archive.md` too. Use an archive item when it
+don't cover well, read `LIBRARY/archive.md` too. Use an archive item when it
 clearly fits better than its current counterpart; otherwise prefer the
 current wording, since it's the one the user most recently chose. Never
 put two versions of the same bullet on one page.
@@ -184,7 +195,7 @@ Write `resume-work/plan.json` in the working directory (see
   positions, in list order. Lookup checks `extra_experience` first, then
   variants in profile order; the first match supplies the header and
   `default_bullets`. The base's section order must include experience.
-- `experience` refills a slot (the `slot` names in `profile.yaml`) with
+- `experience` refills a slot (the `slot` names in `LIBRARY/profile.yaml`) with
   other bullets from the same position. It may name only base positions
   or slots explicitly requested in `add_experience`; an empty bullet list
   fails. Additions cannot duplicate a slot or name one already on the base.
@@ -207,7 +218,7 @@ Spend effort in the order a recruiter's attention decays:
 ### 4. Build
 
 ```bash
-python3 /abs/path/to/SKILL_DIR/scripts/build_resume.py build resume-work/plan.json resume-work/out
+python3 /abs/path/to/SKILL_DIR/scripts/build_resume.py --library /abs/path/to/LIBRARY build resume-work/plan.json resume-work/out
 ```
 
 The script validates the plan, composes the .tex, runs xelatex, and
@@ -215,7 +226,7 @@ checks the result: one page, all fonts embedded, text extractable by ATS
 parsers, every bullet recoverable from the PDF text, and the name, email,
 graduation date and EDUCATION heading present. It prints a short JSON
 summary and exits 1 on any failure. (`--library DIR` before `build`
-points it at a library other than `user/`.)
+selects the same `LIBRARY` whose files you read above.)
 
 - **A validation fail** names the exact bullet, reframe, or skill. Fix the
   plan; don't fight the check. A rejected reframe usually means you added
@@ -266,7 +277,7 @@ Go, Python, PostgreSQL, SQL, REST APIs, Distributed Systems, Docker, CI/CD, GitH
 ```
 
 - **Only things they actually have**: items on the tailored skills lines,
-  anywhere in `skills.md` / `archive.md`, or a technology named in a
+  anywhere in `LIBRARY/skills.md` / `LIBRARY/archive.md`, or a technology named in a
   bullet on the page. Anything they lack stays on the gaps line.
 - **The posting's wording when it matches their item** ("PostgreSQL" for
   their "Postgres"), but never stretch into a different skill ("SQL" does
@@ -285,7 +296,7 @@ Follow `references/cover-letter.md`, write `letter-work/letter.json`, and
 build:
 
 ```bash
-python3 /abs/path/to/SKILL_DIR/scripts/build_cover_letter.py letter-work/letter.json letter-work/out
+python3 /abs/path/to/SKILL_DIR/scripts/build_cover_letter.py --library /abs/path/to/LIBRARY letter-work/letter.json letter-work/out
 ```
 
 It checks one page, embedded fonts, a clean text layer, and the contact

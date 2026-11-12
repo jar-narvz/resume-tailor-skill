@@ -1,6 +1,7 @@
 # First-time setup
 
-Run this when there is no `user/profile.yaml` in the skill folder, or when
+Run this when neither `<SKILL_DIR>/user/profile.yaml` nor
+`/mnt/project/profile.yaml` exists, or when
 the user asks to set up, rebuild, or import their resume. The goal is a
 personal library (`profile.yaml`, `bullets.md`, `skills.md`, `archive.md`)
 that every later tailoring run draws from. It takes one conversation.
@@ -18,7 +19,7 @@ resume, so a padded bullet here becomes a padded resume everywhere.
 - **Claude app** (the skill folder is read-only and the workspace resets
   between chats): write to `resume-work/user/` in the working directory,
   pass `--library resume-work/user` to every script during setup, and
-  finish with step 7 (package and re-upload).
+  finish with step 7 (Project files or a personal zip).
 
 Test which applies by checking whether `<SKILL_DIR>` is writable
 (`test -w <SKILL_DIR> && echo writable`).
@@ -212,20 +213,28 @@ setup only; after setup, rewording always means a new ID).
 
 Do this as soon as they confirm the bases, before any tailoring, even if
 setup started from a tailoring request. In the Claude app, a library that
-isn't packaged is gone when the chat ends.
+isn't saved to a Project or packaged is gone when the chat ends.
 
 - **Claude Code:** the files are already in `<SKILL_DIR>/user/`. Done.
   Suggest committing nothing from `user/` to any public repo
   (`.gitignore` already excludes it).
-- **Claude app:** package the skill with their library inside it:
+- **Claude app:** offer both options; recommend a Project if they tailor
+  in one place.
+  - **Project:** send `profile.yaml`, `bullets.md`, `skills.md`, and
+    `archive.md` from `resume-work/user/` to download. Say: "add these to
+    your Project's Context, then tailor in chats inside that Project."
+    Later updates replace just the changed files; the library is available
+    only in chats inside that Project. Keep the public skill installed.
+  - **Zip:** package the skill with their library inside it. It works in
+    every chat; each library change requires a new zip upload:
 
   ```bash
   python3 <SKILL_DIR>/scripts/package_skill.py --library resume-work/user --out resume-work
   ```
 
-  Send them the zip it prints, and tell them: in Claude, open the skills
-  settings, upload this zip as a skill, and turn off (or delete) the
-  public `resume-tailor` skill so the two don't both trigger. From then
+  For the zip option, send them the zip it prints, and tell them: in
+  Claude, open the skills settings, upload this zip as a skill, and turn
+  off (or delete) the public `resume-tailor` skill so the two don't both trigger. From then
   on their library loads automatically in every chat.
 
 ## 8. Later edits
@@ -233,6 +242,19 @@ isn't packaged is gone when the chat ends.
 When the user says "add this bullet", "I also know Docker", or "I started
 a new job":
 
+- **Project users:** `/mnt/project` is read-only. Before editing, copy
+  the library files to a writable working copy.
+  Start with a fresh `resume-work/user/` so an old working copy cannot
+  supply stale files, including an archive the Project doesn't have:
+
+  ```bash
+  rm -rf resume-work/user && mkdir -p resume-work/user
+  cp /mnt/project/profile.yaml /mnt/project/bullets.md /mnt/project/skills.md resume-work/user/
+  if [ -f /mnt/project/archive.md ]; then cp /mnt/project/archive.md resume-work/user/; fi
+  chmod u+w resume-work/user/*.yaml resume-work/user/*.md
+  ```
+
+  Make every edit there; never write to `/mnt/project`.
 - Draft the new entry with a **fresh ID** (next number for that prefix)
   and show it to them. Pasted notes become bullets under the step 4
   rules: their facts only, ask for numbers that would help, and nothing
@@ -241,6 +263,19 @@ a new job":
 - A new skill goes in `skills.md`. A new position needs an experience
   entry in each variant that should show it by default, or one entry in
   `extra_experience` if none should, plus its bullets in `bullets.md`.
-- Run `validate_library.py`, rebuild a base to confirm, and in the Claude
-  app re-run `package_skill.py` and have them upload the new zip
-  (replacing the old one).
+- **Project users:** validate and build from the writable working copy:
+
+  ```bash
+  python3 <SKILL_DIR>/scripts/validate_library.py resume-work/user
+  python3 <SKILL_DIR>/scripts/build_resume.py --library resume-work/user build --variant <v> resume-work/base-<v>
+  ```
+
+  Fix any failures, then send only the changed file(s) to download and
+  have them replace those files in the Project's Context.
+- **Zip users:** edit a writable copy of their library in
+  `resume-work/user/`, run `validate_library.py resume-work/user` and a
+  base build with `--library resume-work/user`, then re-run
+  `package_skill.py --library resume-work/user --out resume-work` and
+  have them upload the new zip (replacing the old one).
+- **Claude Code:** edit `<SKILL_DIR>/user/`, validate that library, and
+  rebuild a base with `--library <SKILL_DIR>/user`.
