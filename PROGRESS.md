@@ -5,10 +5,24 @@
 Steps 1–3 are done: implemented by Codex, reviewed and verified by Claude
 on 2026-11-12, including the by-hand Claude app check for step 3 (a
 Project chat tailored with no setup and reported `"library":
-"/mnt/project"`). Next: step 4 (automated tests and CI), which needs
-planning detail first.
+"/mnt/project"`). Steps 4–5 are planned and critiqued by Codex. Next:
+step 4 (close three loopholes in the claim checks), for Codex to
+implement; then step 5 (tests and CI) and step 6 (publish).
 
 ## Log
+
+### 2026-11-12 — Steps 4–5 planning — Claude
+- **Did:** Planned tests and CI, got a Codex critique (8 points), and
+  reproduced its two claim loopholes: `check_reframe` accepts Built→Led
+  and a number/unit swap, and the skill-from-bullet check accepts
+  `Script` from `TypeScript`. These became a new fix step 4. Tests and CI
+  moved to step 5, publish to step 6.
+- **Changed:** PLAN.md, PROGRESS.md
+- **Verify:** n/a (planning). Probes run directly against
+  `scripts/build_resume.py`: all three returned no problems.
+- **Review:** Codex critique recorded in PLAN.md's Review log: 8 points
+  accepted, three sub-points rejected with reasons.
+- **Gotchas:** `timeout` isn't on macOS. Run `codex exec` without it.
 
 ### 2026-11-12 — Step 3 review — Claude
 - **Did:** Reviewed Codex's step 3 diff and reran Verify. Lookup order,

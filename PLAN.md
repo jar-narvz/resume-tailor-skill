@@ -7,8 +7,9 @@ lives in PROGRESS.md.
 
 The skill works end to end in Claude Code and the Claude app (paid and
 free accounts): setup, polish with approval, packaging, and tailoring were
-tested by hand on 2026-11-12. What's left before publishing: one gap in
-the data model, one output bug, automated tests, and the public release.
+tested by hand on 2026-11-12. Steps 1-3 are done. What's left before
+publishing: three loopholes in the claim checks (step 4), automated tests
+and CI (step 5), and the public release (step 6).
 
 ## Steps
 
@@ -227,16 +228,223 @@ Then by hand in the Claude app: in the test Project, a new chat tailors
 to a posting without running setup, and the summary's `"library"` is
 `/mnt/project`.
 
-### Step 4 — Automated tests and CI
+### Step 4 — Close three loopholes in the claim checks
 
-pytest suite: reframe rules (number changed, new word stem, >3 words
-added, allowed verb swap), plan validation (unknown ID, wrong slot, skill
-not in inventory, `add_experience` failures), and an end-to-end sample
-build (one page, no fails, every bullet recoverable from the PDF text).
-GitHub Actions installs TeX Live + poppler and runs it; README gets the
-badge. Details to be planned when step 3 is done.
+**Need.** While planning tests, Codex found three ways a plan can make a
+claim the user never wrote, and all three pass the build today
+(reproduced 2026-11-12):
 
-### Step 5 — Publish
+1. `check_reframe("Built a service", "Led a service")` returns no
+   problems. "Led" claims leadership the original didn't. The swap list
+   includes Led/Managed, and a listed verb is allowed anywhere in the
+   text, not only as the first word.
+2. `"... from 3 hours to 25 minutes"` → `"... from 25 hours to 3
+   minutes"` passes, because `numbers()` compares sorted lists, so the
+   same numbers attached to different things look unchanged.
+3. Listing the skill `Script` passes when a bullet on the page says
+   `TypeScript`. `norm()` removes spaces and punctuation, so the
+   "appears in a bullet on this resume" check is a substring match with
+   no word boundaries.
+
+**Design.**
+
+- **Verb swap: first word only, and no promotion.** A word from the swap
+  list that isn't in the original is allowed only as the reframe's first
+  word. The free swap set is the build verbs (built, designed, developed,
+  engineered, implemented, created, wrote, maintained, plus their present
+  forms). Led/lead/managed/manage count as swaps only if the original
+  already has a leadership stem (led, lead, manag-). *Why:* swapping
+  "Built" for "Developed" is wording; swapping it for "Led" is a new claim
+  about the role.
+- **Numbers keep their meaning.** Compare numbers as `(number, next
+  word)` pairs (next word = the token right after the number, or empty at
+  the end), as a sorted list. *Why pairs and not exact order:* reordering
+  clauses legitimately moves numbers ("into PostgreSQL from 40+
+  warehouses"), but the word after a number is what it measures, so a
+  swap like "25 hours" breaks the pairing. Side effect: trimming the word
+  right after a number ("6 REST endpoints" → "6 endpoints") is now
+  rejected. That's a safe failure, because Claude can use the original
+  bullet instead, and the rules doc will say so.
+- **Skills from bullets match whole words.** The "appears in a bullet on
+  this resume" check matches the skill's tokens as a contiguous run of
+  whole tokens in the selected bullets (lowercase, split on anything
+  other than letters, digits, `+` and `#`). So "Node.js" matches
+  "Node.js" and "REST APIs" matches "REST APIs", but "Script" doesn't
+  match "TypeScript". The inventory check (`skills.md`, archive, variant
+  defaults) is unchanged.
+- **Docs:** `references/reframe-rules.md` (verb rule, number rule,
+  trimming next to a number), plus one phrase each in `SKILL.md:78` and
+  the README "Verbatim validation" paragraph if their wording no longer
+  matches.
+
+**Tests** (in a new `tests/test_reframe.py`, plus a skill case in a new
+`tests/test_plan_validation.py`, so step 5 extends these files):
+
+- Rejected: Built→Led, Built→Managed, a swap-list verb inserted mid-text,
+  a number/unit swap, a changed number, an added number, a new stem, and
+  growth over 3 words.
+- Allowed: Built→Developed as the first word, Led→Built, Led kept when
+  the original says Led, clause reorder (the sample plan's `acme-1`
+  reframe), a trim, a plural/tense change, and exactly 3 added connectors.
+- Skills: `Script` with only a TypeScript bullet on the page fails;
+  `Node.js` taken from a selected bullet passes.
+
+**Non-goals.** Fixing false rejections from the simple stemmer (`Used
+services` → `Use service` is rejected); those fail safe. Changing the
+PDF bullet-recovery check (it checks the first five words of text the
+build composed itself, so a plan can't truncate a bullet through it).
+
+**Files.** `scripts/build_resume.py`, `references/reframe-rules.md`,
+`SKILL.md`, `README.md`, `tests/test_reframe.py` (new),
+`tests/test_plan_validation.py` (new).
+
+**Verify.**
+
+```bash
+python3 -m unittest discover -s tests -v
+python3 scripts/build_resume.py --library examples build examples/sample-plan.json out/v4
+python3 scripts/build_resume.py --library examples validate examples/sample-plan.json
+```
+Expected: all tests pass, including the cases above. The sample build is
+unchanged: `"fails": []`, `"pages": 1`, `"bullets_used": 19`,
+`"reframes": 1`. The three probes from **Need** now return problems.
+
+### Step 5 — Automated tests and CI
+
+**Need.** The skill's main promise ("a tailored resume can never claim
+more than you wrote") is enforced in code: `check_reframe`, the plan
+checks in `resolve()`, and the PDF checks in `check_pdf()`. Right now only
+the newest features (older positions, the .tex header, library lookup)
+have tests. A recruiter or contributor reading the repo can't see that
+the core rules hold, and a future change could weaken one without anyone
+noticing.
+
+**Design.**
+
+- **Stay on stdlib `unittest`, not pytest.** *Why:* the existing tests
+  are unittest, so nothing has to be rewritten, and CI and a user's
+  machine need no extra install. The old note here said pytest; this
+  replaces it.
+- **Extend step 4's two files and add three more, each about one rule
+  set.** Library fixtures are temp copies of `examples/`, the same style
+  as `test_add_experience.py`.
+  - `tests/test_reframe.py` (from step 4): add any `check_reframe` cases
+    step 4 didn't cover. No library and no LaTeX, so these run in
+    milliseconds.
+  - `tests/test_plan_validation.py` (from step 4) calls `resolve()`.
+    Each case asserts that a specific message appears in `fails`:
+    - unknown variant, and a graduation date not in `alt_graduations`
+    - an unknown bullet ID, a bullet from another slot or project, and the
+      same bullet twice in one project
+    - `reframe_of` an unknown ID, `reframe_of` from the wrong slot, and a
+      rejected reframe text (shows the rules are wired into the plan, not
+      just the function)
+    - a bullet entry that's neither a string nor `{reframe_of, text}`
+    - an unknown project, and an experience override for a slot the
+      variant doesn't have
+    - an empty experience override ("every position needs at least one")
+    - Skills, rejected: an item not in the inventory; a term that appears
+      only in a bullet that isn't on the page.
+    - Skills, allowed: an item in another variant's `default_skills`; the
+      inner term of a parenthesized inventory item (`Raft` from
+      `Consensus (Raft)`); and an archive-only skill (`Tableau`), with
+      `archive_used` equal to exactly `["Tableau"]`.
+    - The unchanged `examples/sample-plan.json` has no fails.
+    - `add_experience` failures are already covered by
+      `test_add_experience.py`, so they aren't repeated.
+  - `tests/test_check_pdf.py` covers each `check_pdf` rejection with
+    canned `pdfinfo` / `pdffonts` / `pdftotext` output (via
+    `unittest.mock.patch` on `subprocess.run`), so no LaTeX is needed:
+    2 pages, an unembedded font, an unexpected character in the text
+    layer, a missing name or email, a bullet missing from the text, and
+    the page fill under `FILL_MIN` warning. Plus one `cmd_build` case: a
+    plan that fails validation returns 1 and never calls `compile_pdf`.
+  - `tests/test_sample_build.py` runs end to end through the CLI, the
+    way Claude calls it:
+    - The sample plan builds with exit code 0, `"pages": 1`,
+      `"fails": []`, `"bullets_used": 19`. Every **resolved** bullet
+      (from `resolve()` on the same plan, so the `acme-1` reframe is
+      compared as reframed) is found in the `pdftotext` output after
+      `norm()`. Unselected library bullets aren't checked.
+    - An overflow plan (the sample plan plus `add_experience: ["harbor"]`,
+      since the sample is already at 100% fill) exits 1 with the
+      "pages" fail and still writes the `.tex`. This shows the one-page
+      check stops a bad build for real, not only with mocks.
+  - `tests/test_library_tools.py` covers the validator and the package:
+    - `validate_library.py examples` exits 0, and three broken copies
+      fail with their own message: a duplicate bullet ID, a variant
+      default bullet that doesn't exist, and an empty bullet.
+    - `package_skill.py --no-library` builds a zip whose entries all sit
+      under `resume-tailor/`. It holds `SKILL.md`, `scripts/`,
+      `assets/`, `references/` and `examples/`, and has no `user/`
+      entries. Extracted to a temp dir, its own `build_resume.py
+      validate examples/sample-plan.json` exits 0. That zip is what app
+      users install, so a package missing a file is a real failure.
+    - Packaging with a personal library that fails validation exits
+      non-zero.
+- **LaTeX tests must not skip silently in CI.** A shared helper,
+  `tests/support.py`, has a `requires_tex` decorator. It checks for
+  `xelatex`, `pdfinfo`, `pdffonts`, `pdftotext` and an importable
+  `pikepdf`, and its skip message names whatever is missing. It skips
+  locally, but fails instead when the env var
+  `RESUME_TAILOR_REQUIRE_TEX=1` is set, and CI sets it. The two existing
+  `skipUnless(shutil.which("xelatex"))` uses switch to the helper. *Why:*
+  a green CI run that skipped every build test would prove nothing.
+- **GitHub Actions**, `.github/workflows/tests.yml`:
+  - Runs on push and pull_request, on `ubuntu-24.04` (pinned, not
+    `ubuntu-latest`, so a runner upgrade can't silently change TeX
+    versions and line breaks), with Python 3.12 via
+    `actions/setup-python`.
+  - Installs `texlive-xetex fonts-texgyre poppler-utils` with apt (the
+    same line the README gives Debian/Ubuntu users, so CI also checks
+    that instruction), then `python -m pip install pyyaml pikepdf`.
+  - One diagnostic step prints `xelatex --version` and `kpsewhich
+    texgyretermes-regular.otf`, so a font lookup failure is obvious in
+    the log instead of buried in a LaTeX error.
+  - Runs `python -m unittest discover -s tests -v` with
+    `RESUME_TAILOR_REQUIRE_TEX=1`.
+  - *Why apt instead of a full TeX Live image:* it's the smallest install
+    that has xelatex and TeX Gyre Termes, and it's what a user would run.
+- **README:**
+  - A CI badge under the title.
+  - "How it was tested" gets one short paragraph listing what the
+    automated suite covers, and the run command. It gives no test count
+    unless it's copied from a real run's output.
+  - Remove "a full suite is planned."
+
+**Non-goals.**
+
+- Cover letter tests. There's no example letter to build from, so the
+  README will say the cover letter builder is tested by hand only.
+- Fixing the known early return in `add_experience` validation.
+- Testing `times-system` (CI has no Times New Roman).
+- Coverage reports, linting, a Python version matrix, and uploading
+  PDFs as CI artifacts.
+
+**Files.** `tests/support.py`, `tests/test_check_pdf.py`,
+`tests/test_sample_build.py`, `tests/test_library_tools.py` (new);
+`tests/test_reframe.py`, `tests/test_plan_validation.py` (extended);
+`tests/test_add_experience.py` and `tests/test_find_library.py` (only the
+skip decorator changes); `.github/workflows/tests.yml` (new);
+`README.md`. No changes to `scripts/`. If a test exposes a real bug, stop
+and report it rather than changing the script inside this step.
+
+**Verify.**
+
+```bash
+RESUME_TAILOR_REQUIRE_TEX=1 python3 -m unittest discover -s tests -v
+```
+Expected: all tests pass with 0 skipped. Then check that the tests can
+fail, without editing `scripts/`: a throwaway runner in the scratchpad
+patches `build_resume.check_reframe` to return `[]` and reruns the suite
+(failures in `test_reframe.py` and `test_plan_validation.py`), then
+patches `build_resume.check_pdf` to return no fails (the overflow test
+fails). `git diff --stat scripts/` is empty. Then, after the user
+pushes: `gh run list --workflow tests.yml --commit "$(git rev-parse
+HEAD)"` shows that commit's run as `completed success`, and its log
+shows the same pass count with 0 skipped.
+
+### Step 6 — Publish
 
 README pass (mention tests), repo description and topics, make public,
 optional v1.0 release with the zip attached.
@@ -288,3 +496,38 @@ unchanged.
    **Accepted:** step 2 diffs sample PDF text against a pre-change
    baseline; step 3 tests cover fallback, incomplete and read-only
    Project dirs.
+
+**2026-11-12, Steps 4 and 5, Codex critique (8 points).** Codex reviewed
+the first draft of the test plan (then the only step 4). I reproduced
+points 1 and 2 before deciding.
+
+1. Reframe check accepts Built→Led and a number/unit swap. **Accepted**,
+   reproduced: these are claim inflation, which the skill exists to
+   prevent, so they get a fix step (new step 4) before tests are written
+   against them. The stemmer false rejection it also found (`Used` →
+   `Use`) is **rejected** as a fix: it fails safe.
+2. Skill-from-bullet check is a substring match (`Script` from
+   `TypeScript`); also test unselected bullets, other variants'
+   defaults, parenthesized items, exact `archive_used`. **Accepted**,
+   reproduced: the boundary fix goes in step 4, the rest are step 5
+   cases.
+3. The PDF text check must compare resolved bullets, since the sample
+   reframes `acme-1`. **Accepted:** as first written, the test would
+   have failed on correct output.
+4. Most `check_pdf` rejections and `cmd_build`'s fail paths are
+   untested. **Accepted** with mocked tool output (fast, no LaTeX). Its
+   note that a bullet truncated after five words still passes recovery
+   is **rejected** as a fix: the build composes that text itself, so a
+   plan can't cause it.
+5. Validator and package checks are too weak. **Accepted:** three
+   broken-library cases, a fuller zip layout check, and validating from
+   the extracted zip.
+6. Ubuntu font lookup and runner drift. **Accepted:** pin
+   `ubuntu-24.04` and print a `kpsewhich` diagnostic. A separate minimal
+   fontspec compile is **rejected**: the sample build already does that.
+7. Prerequisite helper checks too few tools. **Accepted:** check all
+   four poppler/TeX tools plus `pikepdf`; use `python -m pip`.
+8. Verify edited production code and `--limit 1` can pick the wrong
+   run. **Accepted:** mutation runs use `mock.patch` from a scratch
+   runner, cover `check_pdf` too, and the run is selected by commit SHA.
+
