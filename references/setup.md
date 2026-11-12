@@ -91,7 +91,9 @@ Follow the formats in `examples/` exactly (Alex Rivera is the model):
   short lowercase name for the position (`acme-1`), and the same slot name
   goes in `profile.yaml`.
 - `skills.md`: `## Category` headings with `- item` lines. Include every
-  skill from every source resume.
+  item on every source resume's skills lines, plus the languages and tools
+  its bullets and project headers name (Go, PyTorch), so a variant's
+  default skills can list them.
 - `archive.md`: older material, `-a<n>` IDs, and `@skills Label: a, b`
   lines for skills only older resumes list.
 

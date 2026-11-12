@@ -25,11 +25,12 @@ python3 scripts/package_skill.py --no-library --out .
 
 Upload the `resume-tailor.zip` it creates as a skill in Claude's settings.
 
-**Claude Code.**
+**Claude Code.** Install the [requirements](#requirements) first
+(xelatex and poppler), then:
 
 ```bash
 git clone https://github.com/jar-narvz/resume-tailor-skill ~/.claude/skills/resume-tailor
-pip install pyyaml pikepdf
+python3 -m pip install pyyaml pikepdf
 ```
 
 ## First run: setup
@@ -74,13 +75,23 @@ comma-separated keyword list to paste into the application's skills field.
 - **Python 3** with `pyyaml` and `pikepdf`
 
 The Claude app's code environment already has these. On a Mac for Claude
-Code:
+Code (MacTeX is a 6.9 GB download, and its installer asks for your Mac
+password):
 
 ```bash
 brew install --cask mactex-no-gui
 brew install poppler
-pip install pyyaml pikepdf
+python3 -m pip install pyyaml pikepdf
 ```
+
+Then open a new terminal, and restart Claude Code if it was already
+running, so `xelatex` is on your PATH.
+
+If pip stops with `externally-managed-environment` (common when `python3`
+comes from Homebrew), rerun it as
+`python3 -m pip install --user --break-system-packages pyyaml pikepdf`.
+With `--user`, the packages go in your home folder and Homebrew's own
+files stay untouched.
 
 On Debian or Ubuntu: `sudo apt install texlive-xetex fonts-texgyre poppler-utils`.
 

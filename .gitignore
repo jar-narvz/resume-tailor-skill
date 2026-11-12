@@ -12,6 +12,7 @@ _source/
 *.log
 *.out
 examples/masters/
+out/
 
 # Python
 __pycache__/
