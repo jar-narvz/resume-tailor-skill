@@ -14,8 +14,7 @@ bullet was reordered to put PostgreSQL first. No new words were added.*
 
 ## Install
 
-**Claude app (claude.ai, desktop, mobile).** Skills need code execution
-turned on in your settings.
+**Claude app (claude.ai, desktop, mobile; free accounts work too).**
 
 ```bash
 git clone https://github.com/jar-narvz/resume-tailor-skill
@@ -23,7 +22,17 @@ cd resume-tailor-skill
 python3 scripts/package_skill.py --no-library --out .
 ```
 
-Upload the `resume-tailor.zip` it creates as a skill in Claude's settings.
+Then, in Claude's **Settings → Capabilities**:
+
+1. Turn on **Code execution and file creation**. The skill runs scripts
+   and stops without it.
+2. Under **Skills**, upload the `resume-tailor.zip` it created.
+3. If you have another resume skill turned on, turn it off so the two
+   don't compete.
+
+Start a new chat (outside any Project) to use it. Saved preferences in
+your profile outrank a skill, so if yours say something like "edit my
+Google Doc resume," Claude may follow that instead.
 
 **Claude Code.** Install the [requirements](#requirements) first
 (xelatex and poppler), then:
@@ -40,19 +49,35 @@ job posting. With no library yet, the skill runs setup first
 ([references/setup.md](references/setup.md)):
 
 1. It asks for your current resume (PDF, .docx, Google Doc, or pasted
-   text) and any older versions.
+   text) and any older versions. Nothing else yet.
 2. It copies every bullet **word for word** into a library, with older
-   wordings and old resumes' content kept in an archive.
-3. It asks up to four questions: which base resumes ("variants") you want,
-   what each shows by default, the font, and your graduation date.
-4. It builds each base resume and shows you the PDFs to check.
-5. **Claude Code:** your library is saved in `user/` inside the skill
-   folder, and you're done. **Claude app:** the workspace resets between
-   chats, so it packages a copy of the skill with your library inside and
-   asks you to upload that zip in place of the public one.
+   wordings and old resumes' content kept in an archive. Typos stay in;
+   it points them out for you to decide.
+3. It asks only what your resumes don't answer (at most four questions):
+   which base resumes ("variants") you want, what each shows by default,
+   and your graduation date. In Claude Code it also asks about the font.
+4. It builds each base resume and shows you the PDFs, with a short list
+   of the variants it made and what went to the archive.
+5. Once you confirm, it saves the library (see below). If you started
+   with a job posting, it tailors to it after that.
 
 Your library never leaves your machine or your Claude account, and
 `user/` is in `.gitignore`.
+
+### Where your library lives
+
+- **Claude Code:** the skill is a normal folder on your computer, so
+  setup writes your library into `user/` there and every later run finds
+  it. Nothing else to do.
+- **Claude app:** each chat gets a fresh, temporary workspace that's
+  erased when the chat ends, and Claude can read an installed skill but
+  can't change it. So a library built during setup would vanish with the
+  chat. Instead, setup packs the skill and your library into one zip
+  (`resume-tailor-<your-name>.zip`). Upload it under **Settings →
+  Capabilities → Skills** and turn off (or delete) the public
+  `resume-tailor`. From then on every new chat uses your library
+  automatically. When you add bullets later, Claude hands you a new zip
+  to upload the same way.
 
 ## Usage
 
@@ -179,8 +204,26 @@ computer.
 build. One edit to your phone number or dates updates every variant, and
 there's no hand-maintained LaTeX to get out of sync.
 
+## How it was tested
+
+- **Claude app, example library:** the sample posting built to one page
+  with no failed checks. The page fill, bullet count and file size matched
+  a build on my Mac exactly.
+- **Claude app, first run on a fresh free account:** with a made-up
+  candidate's two resumes (a current one and an older data-focused one),
+  setup asked only for the files, kept a planted typo, made two variants,
+  showed both bases, and handed back a personal zip. Rebuilding from that
+  zip on my Mac matched the app's output.
+- **Read-only install:** two builds in a row from a skill folder with no
+  write permission.
+
+These were manual runs. There's no automated test suite yet.
+
 ## Limitations
 
+- **Claude app: re-upload to update.** The app can't save files between
+  chats, so your library lives inside the skill zip, and every change to
+  it means uploading a new zip.
 - **One layout.** A single-column, Times-style resume. Changing the look
   means editing `assets/resume.cls`.
 - **LaTeX required.** The build needs xelatex, which is a large install
