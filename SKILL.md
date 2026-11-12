@@ -34,12 +34,12 @@ Before anything else, check for `SKILL_DIR/user/profile.yaml`.
   past chats, a connected Google Doc). Don't build a throwaway library
   and tailor in the same turn: setup is where the user checks their base
   resumes and gets a library that lasts. Those sources are fine as input
-  to setup's step 1, and setup still runs through step 5 (show each base)
-  and step 6 (package). If they came with a posting, tailor it only after
-  step 6 has handed them their packaged library.
+  to setup's step 1, and setup still runs through step 6 (show each base)
+  and step 7 (package). If they came with a posting, tailor it only after
+  step 7 has handed them their packaged library.
 - **Present:** tailor as below. The scripts find `user/` on their own.
 - **Asked to set up, re-import, or add content:** `references/setup.md`
-  (step 7 covers later edits).
+  (step 8 covers later edits).
 
 ## What's in the skill
 
@@ -61,7 +61,10 @@ Before anything else, check for `SKILL_DIR/user/profile.yaml`.
 ## The one rule
 
 **Tailoring selects and reorders. It never writes new claims.** Every
-bullet is a library or archive ID used verbatim, or a reframe of one,
+line on a resume is one the user approved: the library holds their
+bullets, and any stronger wording was suggested and accepted during setup
+or a later edit (`references/setup.md` step 4), never during tailoring.
+Every bullet is a library or archive ID used verbatim, or a reframe of one,
 which may only reorder clauses, swap the leading verb, or trim. Every
 skill must already be in `skills.md`, `archive.md`, a variant's
 `default_skills`, or a bullet on the page. The build enforces all of this
@@ -85,7 +88,7 @@ Google Drive connector is available. Then, once per run:
 2. If one was, read it and compare it with the library: new bullets,
    changed skills lines, a new position or project, changed dates.
 3. Show the user the differences and offer to add them (new bullets get
-   fresh IDs; see `references/setup.md` step 7). Don't use unconfirmed
+   fresh IDs; see `references/setup.md` step 8). Don't use unconfirmed
    content in this run.
 
 If Drive isn't connected or the call fails, say so in one line and
@@ -290,7 +293,7 @@ change, update the keyword block to match.
 
 - **New experience or a reworded bullet:** draft the entry with a fresh
   ID and confirm the wording with the user, then add it per
-  `references/setup.md` step 7. Don't put unconfirmed content on a resume
+  `references/setup.md` step 8. Don't put unconfirmed content on a resume
   in the meantime.
 - **Style changes** (font, spacing, section look) belong in
   `assets/resume.cls` and are their own conversation, never part of a

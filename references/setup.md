@@ -5,10 +5,11 @@ the user asks to set up, rebuild, or import their resume. The goal is a
 personal library (`profile.yaml`, `bullets.md`, `skills.md`, `archive.md`)
 that every later tailoring run draws from. It takes one conversation.
 
-Work in the user's words. Setup copies; it never improves, embellishes, or
-"punches up" a bullet. Whatever goes into the library is what the build
-will let onto a resume, so a padded bullet here becomes a padded resume
-everywhere.
+Work from the user's facts. Setup copies their bullets exactly, then
+suggests stronger wording (step 4), and nothing changes until the user
+approves it. A suggestion may sharpen how a fact is said; it never adds a
+fact. Whatever goes into the library is what the build will let onto a
+resume, so a padded bullet here becomes a padded resume everywhere.
 
 ## Where the library goes
 
@@ -17,7 +18,7 @@ everywhere.
 - **Claude app** (the skill folder is read-only and the workspace resets
   between chats): write to `resume-work/user/` in the working directory,
   pass `--library resume-work/user` to every script during setup, and
-  finish with step 6 (package and re-upload).
+  finish with step 7 (package and re-upload).
 
 Test which applies by checking whether `<SKILL_DIR>` is writable
 (`test -w <SKILL_DIR> && echo writable`).
@@ -64,15 +65,24 @@ Merge across sources:
 - A different wording of the same bullet is a **separate ID** (the newest
   wording gets the lower number and goes into defaults; the older one
   stays available).
-- Bullets, projects and skills that appear only on older resumes go to
-  `archive.md`, not `bullets.md`.
+- Content that appears only on older resumes:
+  - **Bullets** of a position or project that's in the library, and
+    **skills**, go to `archive.md`.
+  - **A whole project** goes in `bullets.md` with no variant showing it
+    by default. A plan can swap it in when a posting fits.
+  - **A whole position** can't be archived: a plan can't add a position,
+    so it only appears if a variant shows it. If it fits a different kind
+    of role, propose a variant that includes it (step 3); otherwise leave
+    it out. Either way, say which in step 6.
 
-Don't fix grammar, add metrics, or merge two bullets into one. If a bullet
-has an obvious typo, keep it and mention it in step 5 so they can decide.
+Extraction is exact: don't fix grammar, add metrics, or merge two bullets
+into one here. Typos and weak wording get handled in step 4, where the
+user sees each change.
 
-## 3. Ask at most four questions
+## 3. Questions, and anything else to add
 
-Ask together, in one message, only what you can't infer:
+Ask together, in one message, at most four questions, only what you can't
+infer:
 
 1. **Variants.** Suggest one or two based on their bullets (e.g. "software
    engineering" and "ML/data") with a one-line `use_for` each. If their
@@ -86,10 +96,59 @@ Ask together, in one message, only what you can't infer:
 4. **Graduation date(s)**, if the resume doesn't show one or they apply to
    programs that shift it (these go in `alt_graduations`).
 
+In the same message, invite more material: "Is there anything that's not
+on these resumes, like a new job, a project, a skill, or more detail on
+something listed? Paste it however you have it: notes, a job description,
+a project README." Rough notes are fine; step 4 turns them into bullets.
+
 If the person isn't around to answer, take the defaults (variants as
 suggested, current resume's content as defaults, `termes`) and say so.
 
-## 4. Write the library
+## 4. Polish, with approval
+
+Suggest stronger versions of the bullets that need it, and turn any notes
+from step 3 into bullets. The user approves every change.
+
+**Which bullets.** Only the ones where a rewrite clearly helps: a weak
+opening ("Worked on", "Helped with", "Responsible for"), no visible
+result, vague wording, a typo, or more than two lines. Leave strong
+bullets alone, and don't propose a change just to make one.
+
+**What a suggestion may do:**
+
+- Open with a specific action verb, and put the result where it's easy
+  to see (what they did, how, and what came of it).
+- Tighten wording, fix typos and grammar, and keep tense consistent
+  (past for finished work, present for current).
+- Use a number the user gave, in the bullet or in an answer below.
+
+**What it may never do:**
+
+- Add a fact the user didn't state: a tool, a skill, a result, a team
+  size, or a bigger role ("led", "owned", "architected" when they wrote
+  "helped" or "built").
+- Invent or estimate a number, or turn "faster" into a percentage.
+- Merge two bullets, or split one into claims it didn't make.
+
+**Ask for numbers.** The biggest gain usually comes from a number only
+the user knows. Pick the bullets that would gain the most (at most five)
+and ask in one message: "About how many users?", "Roughly how much
+faster?", "How many tests?" Don't put a sample figure in the question
+("something like 60?"): a guess you offer can come back as their answer.
+Use only what they answer, as they gave it;
+"about 500" stays "about 500". If they don't know, the bullet stays
+without a number.
+
+**Show the changes** as before → after pairs, with a few words on what
+changed, plus the bullets drafted from their notes (marked as new). They
+can accept all, accept some, edit any, or keep the original. Only
+accepted versions go into the library; during setup an accepted rewrite
+replaces the original. Skills from their notes go into `skills.md` once
+they confirm them. If they hedge ("I've used Docker a little"), ask
+whether they could answer interview questions on it before listing it;
+if not, leave it out.
+
+## 5. Write the library
 
 Follow the formats in `examples/` exactly (Alex Rivera is the model):
 
@@ -118,7 +177,7 @@ python3 <SKILL_DIR>/scripts/render_masters.py <LIBRARY>
 
 Fix everything the validator reports before going on.
 
-## 5. Build each base and show it
+## 6. Build each base and show it
 
 For each variant:
 
@@ -136,16 +195,16 @@ Then send the PDFs with a short summary of the library:
 
 - the variants you made and what each is for (if their sources had two
   versions and you made one variant, say why);
-- what went to `archive.md` (older positions, projects, skills), so they
-  know it's available when a posting fits;
-- any typos you kept.
+- what went to `archive.md`, which older projects are in the library
+  but off by default, and any older position left out (and why), so they
+  know what's available when a posting fits.
 
-Ask them to check the PDFs against their real resume: every bullet theirs
-and word for word, dates and links right. Apply their corrections to the
+Ask them to check the PDFs: every bullet theirs, as written or as they
+approved in step 4, and dates and links right. Apply their corrections to the
 library (corrections to wording replace the bullet text in place during
 setup only; after setup, rewording always means a new ID).
 
-## 6. Make it stick
+## 7. Make it stick
 
 Do this as soon as they confirm the bases, before any tailoring, even if
 setup started from a tailoring request. In the Claude app, a library that
@@ -165,13 +224,15 @@ isn't packaged is gone when the chat ends.
   public `resume-tailor` skill so the two don't both trigger. From then
   on their library loads automatically in every chat.
 
-## 7. Later edits
+## 8. Later edits
 
 When the user says "add this bullet", "I also know Docker", or "I started
 a new job":
 
 - Draft the new entry with a **fresh ID** (next number for that prefix)
-  and show it to them. Never edit or delete an existing ID; a reworded
+  and show it to them. Pasted notes become bullets under the step 4
+  rules: their facts only, ask for numbers that would help, and nothing
+  goes in until they approve it. Never edit or delete an existing ID; a reworded
   bullet is a new ID next to the old one.
 - A new skill goes in `skills.md`. A new position needs a slot in each
   variant that should show it, plus its `## Position` section.

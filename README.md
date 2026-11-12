@@ -51,14 +51,20 @@ job posting. With no library yet, the skill runs setup first
 1. It asks for your current resume (PDF, .docx, Google Doc, or pasted
    text) and any older versions. Nothing else yet.
 2. It copies every bullet **word for word** into a library, with older
-   wordings and old resumes' content kept in an archive. Typos stay in;
-   it points them out for you to decide.
+   wordings and old resumes' content kept in an archive.
 3. It asks only what your resumes don't answer (at most four questions):
    which base resumes ("variants") you want, what each shows by default,
    and your graduation date. In Claude Code it also asks about the font.
-4. It builds each base resume and shows you the PDFs, with a short list
+   It also asks whether there's anything else to add, and you can paste
+   rough notes: a new job, a project, skills.
+4. It suggests stronger wording for the bullets that need it (a clearer
+   action, the result up front, fixed typos), turns your notes into
+   bullets, and asks for the numbers that would help most ("about how
+   many users?"). You see each change as before → after and approve it.
+   It never adds a fact or a number you didn't give it.
+5. It builds each base resume and shows you the PDFs, with a short list
    of the variants it made and what went to the archive.
-5. Once you confirm, it saves the library (see below). If you started
+6. Once you confirm, it saves the library (see below). If you started
    with a job posting, it tailors to it after that.
 
 Your library never leaves your machine or your Claude account, and
@@ -159,6 +165,14 @@ fixes the plan and rebuilds rather than delivering a broken resume. See
 nothing else. AI-written resume bullets tend to drift toward whatever the
 posting asks for, and you're the one who has to answer for every line in
 an interview. Tailoring is mostly choosing and ordering anyway.
+
+**Improve bullets once, with approval, not per posting.** Weak bullets
+are worth fixing, so setup suggests stronger wording and asks you for
+missing numbers. That happens when a bullet enters the library, where you
+see every change, never during tailoring. Rewriting for each posting
+would let each version drift a little toward the job description, with
+no one checking. This way every line on a resume is one you approved,
+and the build can still check that in code.
 I built this for my own internship search, where I apply to a lot of
 roles. I had already cut C++, REST APIs and Tableau from my resume when I
 couldn't back them up in an interview, and I wanted tailoring that could
@@ -221,6 +235,9 @@ These were manual runs. There's no automated test suite yet.
 
 ## Limitations
 
+- **Old positions need a variant.** A tailoring plan can't add a job
+  that its base resume doesn't show, so a position that's only on an
+  older resume is usable only if some variant includes it.
 - **Claude app: re-upload to update.** The app can't save files between
   chats, so your library lives inside the skill zip, and every change to
   it means uploading a new zip.
