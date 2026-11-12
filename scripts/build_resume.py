@@ -39,6 +39,7 @@ and default bullets; experience can override those bullets by slot.
 
 import argparse
 import copy
+from datetime import date
 import json
 import os
 import re
@@ -270,7 +271,8 @@ def resolve(plan, library):
     current = skill_inventory({**lib, "archive_skills": []})
     archive_used += [x for l in out_skills for x in l.get("items", [])
                      if norm(x) in archive_skill_items and norm(x) not in current]
-    resolved = {"variant": variant, "src": src, "skills": out_skills,
+    resolved = {"variant": variant, "company": plan.get("company", ""),
+                "role": plan.get("role", ""), "src": src, "skills": out_skills,
                 "projects": out_projects, "slots": out_slots, "reframes": n_reframes,
                 "archive_used": archive_used, "added_experience": additions, "graduation": graduation,
                 "name": profile.get("name", ""), "email": email_of(profile)}
@@ -296,8 +298,21 @@ def project_head(p):
     return f"\\rProject{{{title}}}{{{tech}}}{{{esc(p.get('context', ''))}}}{{{term}}}\n"
 
 
-def compose(r):
-    tex = r["src"]
+def compose(r, build_date: date | None = None):
+    build_date = build_date if build_date is not None else date.today()
+    name, company, role, variant = (
+        " ".join(str(r.get(key) or "").split())
+        for key in ("name", "company", "role", "variant")
+    )
+    if company and role:
+        description = f"tailored for {company} ({role})"
+    elif company or role:
+        description = f"tailored for {company or role}"
+    else:
+        description = f"{variant} base"
+    header = f"% {name} resume, {description}, built {build_date.isoformat()} by resume-tailor"
+    tex = re.sub(r"\A(?:%[^\n]*\n)*", "", r["src"])
+    tex = header + "\n" + tex
     tex = "\n".join(l for l in tex.splitlines() if not l.startswith("% @"))
     skills = "\n".join(f"\\rSkill{{{esc(l['label'])}}}{{{esc(', '.join(l['items']))}}}"
                        for l in r["skills"])
