@@ -306,7 +306,9 @@ def fix_tounicode(pdf_path):
 def compile_tex(tex, cls_name, jobname, outdir):
     """Compile with xelatex in a temp dir. Returns (pdf_path, log, error)."""
     work = tempfile.mkdtemp(prefix=jobname + "-")
-    shutil.copy(os.path.join(ASSETS, cls_name), work)
+    # copyfile, not copy: copying the mode bits from a read-only skill folder
+    # (the Claude app) would make the second compile unable to overwrite it.
+    shutil.copyfile(os.path.join(ASSETS, cls_name), os.path.join(work, cls_name))
     fonts = os.path.join(ASSETS, "fonts")
     if os.path.isdir(fonts):  # optional: fonts you add yourself
         shutil.copytree(fonts, os.path.join(work, "fonts"), dirs_exist_ok=True)
@@ -323,7 +325,7 @@ def compile_tex(tex, cls_name, jobname, outdir):
         return None, log, "xelatex failed: " + " | ".join(err or ["see log"])
     fix_tounicode(pdf)
     shutil.copy(pdf, os.path.join(outdir, jobname + ".pdf"))
-    shutil.copy(os.path.join(ASSETS, cls_name), outdir)
+    shutil.copyfile(os.path.join(ASSETS, cls_name), os.path.join(outdir, cls_name))
     return os.path.join(outdir, jobname + ".pdf"), log, None
 
 
