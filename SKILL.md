@@ -13,6 +13,15 @@ deliver, and summarize.
 `SKILL_DIR` below means the directory this SKILL.md is in. Use literal
 absolute paths in commands (shell variables don't carry between calls).
 
+## Code execution is required
+
+Everything below runs scripts. If you can't run commands (code execution
+is off, or this is an incognito chat with no workspace), say in one line
+that this skill needs code execution, tell them to turn on "Code execution
+and file creation" in Settings → Capabilities and start a new chat, and
+stop. Don't offer a text-only version: none of the build's checks would
+run, so nothing would stop a padded skill or a two-page resume.
+
 ## Setup mode comes first
 
 Before anything else, check for `SKILL_DIR/user/profile.yaml`.
@@ -21,6 +30,13 @@ Before anything else, check for `SKILL_DIR/user/profile.yaml`.
   line, then follow `references/setup.md` instead of tailoring. (If they
   only want to see what the skill does, you can tailor with the demo
   library in `examples/`, but say clearly that it's a made-up person.)
+  Do this even when you could find their resume another way (memory,
+  past chats, a connected Google Doc). Don't build a throwaway library
+  and tailor in the same turn: setup is where the user checks their base
+  resumes and gets a library that lasts. Those sources are fine as input
+  to setup's step 1, and setup still runs through step 5 (show each base)
+  and step 6 (package). If they came with a posting, tailor it only after
+  step 6 has handed them their packaged library.
 - **Present:** tailor as below. The scripts find `user/` on their own.
 - **Asked to set up, re-import, or add content:** `references/setup.md`
   (step 7 covers later edits).

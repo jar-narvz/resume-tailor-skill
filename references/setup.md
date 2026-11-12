@@ -24,7 +24,9 @@ Test which applies by checking whether `<SKILL_DIR>` is writable
 
 ## 1. Collect source material
 
-Ask once for everything they have:
+Ask once for everything they have. This first message asks only for
+files; the step 3 questions wait until you've read them, since the resume
+answers most of them.
 
 - Their current resume: PDF, .docx, a Google Doc link, or pasted text.
 - Any older or alternate resumes (a data-science version, last year's
@@ -32,6 +34,15 @@ Ask once for everything they have:
 
 Read every file fully. For a Google Doc, use the Drive connector if it's
 connected; otherwise ask them to download it as PDF or paste it.
+
+Memory and past chats can help here, but only to find things: a resume
+doc they mentioned, an older version, a job or project to ask about.
+They hold summaries, not the user's exact wording, so:
+
+- Copy bullet text word for word from an actual resume (file, doc, or
+  pasted text), never from memory or a past chat.
+- Anything you only found in memory or a past chat (a job, a date, a
+  skill) goes into the library only after the user confirms it.
 
 ## 2. Extract
 
@@ -69,8 +80,9 @@ Ask together, in one message, only what you can't infer:
 2. **Defaults per variant.** Propose which bullets and projects each base
    shows, starting from their current resume; ask only if it's unclear.
 3. **Font.** `termes` (free Times clone, the default) or `times-system`
-   (Times New Roman installed on their computer; the Claude app's
-   environment may not have it).
+   (Times New Roman installed on their computer). In the Claude app, skip
+   this question and use `termes`: its environment doesn't have Times New
+   Roman, so `times-system` can't build there.
 4. **Graduation date(s)**, if the resume doesn't show one or they apply to
    programs that shift it (these go in `alt_graduations`).
 
@@ -115,14 +127,29 @@ python3 <SKILL_DIR>/scripts/build_resume.py --library <LIBRARY> build --variant 
 ```
 
 Each build must pass (one page, fonts embedded, no fails). If a base
-warns that the page is under ~93% full, add default bullets; if it spills
-to two pages, remove the weakest default. Then send the PDFs and ask the
-user to check them against their real resume: every bullet theirs and
-word for word, dates and links right. Apply their corrections to the
+warns that the page is under ~93% full, add default bullets from
+`bullets.md`; if none are left, leave it short and say so. Never move
+archive content into a variant's defaults to fill space; a short honest
+page is fine. If it spills to two pages, remove the weakest default.
+
+Then send the PDFs with a short summary of the library:
+
+- the variants you made and what each is for (if their sources had two
+  versions and you made one variant, say why);
+- what went to `archive.md` (older positions, projects, skills), so they
+  know it's available when a posting fits;
+- any typos you kept.
+
+Ask them to check the PDFs against their real resume: every bullet theirs
+and word for word, dates and links right. Apply their corrections to the
 library (corrections to wording replace the bullet text in place during
 setup only; after setup, rewording always means a new ID).
 
 ## 6. Make it stick
+
+Do this as soon as they confirm the bases, before any tailoring, even if
+setup started from a tailoring request. In the Claude app, a library that
+isn't packaged is gone when the chat ends.
 
 - **Claude Code:** the files are already in `<SKILL_DIR>/user/`. Done.
   Suggest committing nothing from `user/` to any public repo
