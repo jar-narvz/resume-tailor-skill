@@ -4,11 +4,45 @@
 
 Steps 1–5 are done. Step 5's CI passed on GitHub on the step 5 commit
 (`Ran 76 tests ... OK`, no skips, TeX Live 2023/Debian).
-Step 6a is done (2026-11-12): history rewritten to the noreply email and
-the GitHub repo recreated (still private). Next: 6b privacy sweep, then
-6c ready-for-anyone sweep, then 6d publish.
+Steps 6a (noreply rewrite, repo recreated) and 6b (privacy sweep: 0 real
+leaks) are done; the repo is still private. Next: 6c ready-for-anyone
+sweep, then 6d publish.
 
 ## Log
+
+### 2026-11-13 — Step 6b (privacy sweep) — Claude
+- **Did:** Built a private denylist (607 terms: contact details,
+  Google Doc IDs, employer/school/project names, 571 six-word phrases
+  from real bullets) from the author's private resume skill. The
+  `~/.claude/skills/resume-tailor/user/` copy named in PLAN.md turned out
+  to be the made-up example, so it wasn't used. The list stays in the
+  session scratchpad only. Searched it plus generic patterns (email,
+  phone, school, local paths, Google Doc URLs, claude.ai links, secret
+  keys) across every object that will be served, binaries, the release
+  zip, and GitHub.
+- **Changed:** PROGRESS.md
+- **Verify:**
+  - History: 92 unique blobs from `git rev-list --objects --all` (2
+    binary, scanned via `strings`) plus all commit metadata and
+    messages. 13 hits, all non-personal: the two made-up `(555)`
+    numbers, and 11 generic strings the public and private skills share
+    (format instructions, "Relevant Coursework", "May 2027", "San
+    Francisco" from the sample posting, "Multi"). 0 real leaks. Commit
+    metadata shows only the noreply email.
+  - Binaries: `sample-output.pdf` docinfo is Alex Rivera only, no XMP;
+    `before-after.png` has only IHDR/PLTE/IDAT/IEND chunks.
+  - Release zip, built with `package_skill.py --no-library` from a
+    `git archive HEAD` checkout: 22 files, all tracked, no symlinks, 0
+    denylist hits. `profile.example.yaml` is excluded, and nothing in
+    the skill references it.
+  - GitHub (recreated repo): 2 Actions runs (both new SHAs, logs have
+    no email or local path); 0 artifacts, caches, secrets, variables,
+    releases, tags, issues, PRs, deployments, environments, hooks and
+    deploy keys; one branch (`main`); Activity is `push` and
+    `branch_creation` only; sole collaborator is the owner; wiki, Pages
+    and discussions are off.
+- **Review:** n/a (no code changes).
+- **Gotchas:** Re-run the zip scan on the exact release commit in 6d.
 
 ### 2026-11-12 — Step 6a (commit email) — user ran, Claude verified
 - **Did:** The user rewrote history in a fresh `--no-local` clone with
