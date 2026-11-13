@@ -460,8 +460,119 @@ shows the same pass count with 0 skipped.
 
 ### Step 6 — Publish
 
-README pass (mention tests), repo description and topics, make public,
-optional v1.0 release with the zip attached.
+**Need.** Strangers (recruiters, other students) can find the repo, trust
+that it works by following the README alone, and learn nothing personal
+about the author beyond what the author chose to show (name on the
+license, the README's design story).
+
+**What a first sweep found (2026-11-12).** Every version of every
+tracked file in all 25 commits was searched for the author's email,
+phone patterns, school, LinkedIn URLs, Google Doc IDs, local paths,
+claude.ai project/chat links and secret-key patterns. Only made-up data
+turned up (Alex Rivera, Jordan Lee, `(555)` numbers), plus the author's
+name on the LICENSE and README copyright lines, which is intended. The
+sample PDF's metadata says "Alex Rivera" and the PNG has no text chunks.
+**The one real exposure: all 25 commits list the author's personal Gmail
+as the author email,** which anyone can read from a public repo
+(`git log`, or `.patch` on any commit URL).
+
+**Design.**
+
+- **6a. Commit email: the user's decision, made before anything is
+  public.** Options:
+  1. *(Recommended)* Rewrite the 25 commits' author and committer email
+     to the GitHub noreply address (`<id>+jar-narvz@users.noreply.github.com`)
+     with `git filter-repo --mailmap`, then force-push `main` once,
+     while the repo is still private. *Why now:* nobody else has a
+     clone, so a rewrite breaks nothing, and once the repo is public the
+     email is exposed for good. The user runs the force push (the global
+     rules forbid Claude doing destructive git).
+  2. Keep history as is. Simplest, but the email is public.
+  3. Publish a fresh repo with one squashed commit. Hides the email but
+     throws away the commit history that shows how the project was built.
+
+  With any option: set the repo's local `user.email` to the noreply
+  address, and turn on GitHub's "Keep my email addresses private" and
+  "Block command line pushes that expose my email" (the user changes
+  these account settings).
+- **6b. Privacy sweep (Claude, read-only), repeatable and recorded in
+  PROGRESS.md:**
+  - **Denylist from the real library.** Build a list of the author's
+    real identifiers (phone, email, school, employers, project names,
+    a few distinctive bullet phrases) from
+    `~/.claude/skills/resume-tailor/user/`, the author's real library,
+    which is outside this repo. Keep it only in the scratchpad, never
+    in the repo, PLAN.md or PROGRESS.md (PROGRESS records how many terms
+    and how many matches, not the terms themselves).
+  - Search the denylist plus the generic patterns from the first sweep
+    across: every tracked file at HEAD, every blob in history
+    (`git log --all -p`), all commit messages, and author/committer
+    metadata after 6a.
+  - Look inside binaries: `examples/sample-output.pdf` (docinfo, XMP,
+    `strings`), `docs/before-after.png` (text/EXIF chunks), and the zip
+    from `package_skill.py --no-library` (list its files and search its
+    extracted text).
+  - GitHub side: the Actions log of the latest run, repo secrets (should
+    be none), and the description and topics.
+  - Anything found gets removed or replaced with made-up data in a normal
+    commit. If it's in history, it goes back to 6a's decision.
+- **6c. Ready-for-anyone sweep:**
+  - **Fresh clone, README only.** Clone from GitHub into a temp dir and
+    follow the README literally, with no knowledge from this repo: the
+    "try it without setting anything up" commands, the full test
+    command, and `package_skill.py --no-library`. Every command must work
+    as written.
+  - **README read as a stranger:** every relative link resolves to a
+    tracked file. Install steps match the current Claude app UI
+    (Settings → Capabilities, Customize → Skills). Every number traces
+    to a real source (honesty rule): the 6.9 GB MacTeX size, "matched
+    exactly", the line-break claim about Times New Roman, and the
+    Affinda findings. Fix or drop any claim that can't be traced.
+    Limitations are current. One final wording pass, which may cut but
+    doesn't restructure.
+  - **Claude app smoke test with the final zip.** The scripts changed
+    since the last app test (steps 4–5), so upload the zip built from
+    the release commit to the test account and tailor the sample posting
+    once. The user uploads, and Claude drives the built-in browser.
+  - Keep PLAN.md and PROGRESS.md public. *Why:* they show the
+    plan → critique → implement → review process, which is part of what
+    the portfolio demonstrates. They name only made-up candidates and the
+    test account type, which the sweep confirms.
+- **6d. Publish (the user runs every outward-facing command; Claude gives
+  them exactly):**
+  - `gh repo edit` with a one-line description and topics (`claude`,
+    `claude-skills`, `resume`, `latex`, `ats`, `python`).
+  - `gh repo edit --visibility public --accept-visibility-change-consequences`.
+  - Tag `v1.0.0` on the release commit, and `gh release create v1.0.0`
+    with `resume-tailor.zip` (built from that commit) attached, a SHA-256
+    for the zip in the notes, and three short notes: what it does, how to
+    install, and the limitations link.
+  - After publishing, check logged out (the built-in browser in a fresh
+    tab with no GitHub session, or `curl`): the repo page loads, the
+    badge shows passing, the release asset downloads and matches its
+    SHA-256, and a commit's `.patch` URL shows no personal email.
+
+**Non-goals.** CONTRIBUTING.md, issue templates, a Skills marketplace
+listing, a demo video, a changelog beyond the release notes, and scrubbing
+the author's name (it's intentionally on the license).
+
+**Files.** Depends on what the sweeps find; expected: `README.md`,
+`PROGRESS.md`. History rewrite only if the user picks 6a option 1 or 3.
+
+**Verify.**
+
+```bash
+git log --all --format='%ae %ce' | sort -u
+gh repo view --json visibility,description,repositoryTopics
+gh release view v1.0.0 --json assets
+```
+Expected: emails are only the noreply address (or the user chose to keep
+them); visibility `PUBLIC` with the description and topics; one asset,
+`resume-tailor.zip`. Plus, recorded in PROGRESS.md: denylist and pattern
+search over HEAD, history, messages, binaries and the zip with 0
+unexpected matches; every fresh-clone command succeeded; the app smoke
+test summary (`"pages": 1`, `"fails": []`); and the logged-out checks
+passed.
 
 ## Review log
 

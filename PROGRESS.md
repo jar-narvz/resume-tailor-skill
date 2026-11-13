@@ -8,6 +8,21 @@ Next: step 6 (publish), which needs planning detail first.
 
 ## Log
 
+### 2026-11-12 — Step 6 planning — Claude
+- **Did:** Planned step 6 (publish), including the privacy and
+  ready-for-anyone sweeps the user asked for. A first privacy scan of all
+  25 commits (every file version, messages, PDF/PNG metadata, secret
+  patterns, local paths) found only made-up data and the intended
+  copyright name. The one exposure: every commit's author email is the
+  author's personal address. Plan 6a leaves that decision to the user.
+- **Changed:** PLAN.md, PROGRESS.md
+- **Verify:** n/a (planning).
+- **Review:** Codex critique pending. `codex exec` stalled twice (once
+  on a web search, once at startup after an MCP auth error), so it was
+  stopped with no output. Rerun before step 6 starts.
+- **Gotchas:** Don't pipe `codex exec` into `head`: that kills it early.
+  Use `-o <file>` for the final message.
+
 ### 2026-11-12 — Step 5 review — Claude
 - **Did:** Reviewed Codex's step 5 diff against PLAN.md and ran Verify
   locally, including the mutation checks.
