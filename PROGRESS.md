@@ -4,9 +4,32 @@
 
 Steps 1–5 are done. Step 5's CI passed on GitHub on the step 5 commit
 (`Ran 76 tests ... OK`, no skips, TeX Live 2023/Debian).
-Next: step 6 (publish), planned and critiqued. 6a (rewrite the commit email to noreply, recreate the GitHub repo) runs first.
+Step 6a is done (2026-11-12): history rewritten to the noreply email and
+the GitHub repo recreated (still private). Next: 6b privacy sweep, then
+6c ready-for-anyone sweep, then 6d publish.
 
 ## Log
+
+### 2026-11-12 — Step 6a (commit email) — user ran, Claude verified
+- **Did:** The user rewrote history in a fresh `--no-local` clone with
+  `git filter-repo` (email-only mailmap to the noreply address, plus
+  `--replace-text` for the step 5 CI commit's SHA and run ID), deleted the
+  GitHub repo, and recreated it private with `gh repo create --push`.
+  The pre-rewrite folder is kept locally as a backup.
+- **Changed:** git history (all commits); PROGRESS.md
+- **Verify:** Rewritten clone: 27 commits; `git log --all --format='%ae
+  %ce' | sort -u` → only `207102629+jar-narvz@users.noreply.github.com`;
+  the old SHA and run ID have 0 matches in `git log --all -p`; tracked
+  files identical to the backup. GitHub: `git ls-remote origin` equals
+  local `main` (`9a80212`), 27 commits; the API's author and committer
+  emails are only the noreply address; Activity shows one
+  `branch_creation`, no force push; the old commit returns "No commit
+  found for SHA"; the new CI run is `completed success`, `Ran 76 tests
+  ... OK`, no skips.
+- **Review:** n/a (no code). GitHub's two email-privacy settings are the
+  user's to confirm; the `gh` token can't read them.
+- **Gotchas:** Work from the rewritten folder from now on. The backup
+  folder still has the old history, so never push from it.
 
 ### 2026-11-12 — Step 6 planning — Claude
 - **Did:** Planned step 6 (publish), including the privacy and
