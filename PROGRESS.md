@@ -43,7 +43,8 @@ private. Next: 6d publish (the user runs the commands).
     92.7%) and line count (49, 49), but one bullet wrapped one word
     differently, so the README now says exactly that. The Affinda
     findings come from the author's own earlier testing, with no file
-    to trace them to; kept pending the author's confirmation before 6d.
+    to trace them to; the author confirmed them
+    on 2026-11-13, so they stay.
   - App smoke test (built-in browser, test account): the zip from a
     `git archive HEAD` checkout (22 files) replaced resume-tailor in
     place. A new chat in the `tailor-resume` Project, with a made-up
