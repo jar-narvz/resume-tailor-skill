@@ -47,6 +47,9 @@ git clone https://github.com/jar-narvz/resume-tailor-skill ~/.claude/skills/resu
 python3 -m pip install pyyaml pikepdf
 ```
 
+(On Debian or Ubuntu, skip the pip line: the apt line under
+Requirements installs the same packages.)
+
 ## First run: setup
 
 Start a chat and say something like *"set up my resume"*, or just share a
@@ -138,11 +141,18 @@ comes from Homebrew), rerun it as
 With `--user`, the packages go in your home folder and Homebrew's own
 files stay untouched.
 
-On Debian or Ubuntu: `sudo apt install texlive-xetex fonts-texgyre poppler-utils`.
-
-Try it without setting anything up (uses the made-up example library):
+On Debian or Ubuntu, one line covers everything, including the Python
+packages, so skip pip:
 
 ```bash
+sudo apt install texlive-xetex fonts-texgyre poppler-utils python3-yaml python3-pikepdf
+```
+
+Try it without setting anything up (uses the made-up example library).
+Run these from the skill folder:
+
+```bash
+cd ~/.claude/skills/resume-tailor
 python3 scripts/validate_library.py examples
 python3 scripts/build_resume.py --library examples build examples/sample-plan.json out
 ```
@@ -225,8 +235,9 @@ end of a title, in parentheses.
 
 **TeX Gyre Termes instead of bundled fonts.** Times New Roman's license
 doesn't allow redistributing the font files, so the default is TeX Gyre
-Termes, a free Times clone that ships with TeX Live. On the author's own
-resumes it produced the same line breaks and page fill as Times New Roman.
+Termes, a free Times clone that ships with TeX Live. On the author's two
+one-page resumes (98 lines in all), it gave the same page fill and line
+count as Times New Roman; one bullet wrapped one word differently.
 Set `font: times-system` to use Times New Roman installed on your
 computer.
 

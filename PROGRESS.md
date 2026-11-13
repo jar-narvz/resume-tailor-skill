@@ -4,11 +4,57 @@
 
 Steps 1–5 are done. Step 5's CI passed on GitHub on the step 5 commit
 (`Ran 76 tests ... OK`, no skips, TeX Live 2023/Debian).
-Steps 6a (noreply rewrite, repo recreated) and 6b (privacy sweep: 0 real
-leaks) are done; the repo is still private. Next: 6c ready-for-anyone
-sweep, then 6d publish.
+Steps 6a (noreply rewrite, repo recreated), 6b (privacy sweep: 0 real
+leaks) and 6c (ready-for-anyone sweep) are done; the repo is still
+private. Next: 6d publish (the user runs the commands).
 
 ## Log
+
+### 2026-11-13 — Step 6c (ready-for-anyone sweep) — Claude
+- **Did:** Followed the README literally in a bare `ubuntu:24.04`
+  container (cloned from a bare mirror equal to GitHub `main`, since the
+  repo is private), checked every link, traced every number and claim,
+  and ran the Claude app smoke test with the final zip.
+- **Changed:** README.md, PROGRESS.md
+- **Verify:**
+  - Container: apt line exit 0; clone OK; sample build `"pages": 1`,
+    `"fails": []`, `"bullets_used": 19`; `RESUME_TAILOR_REQUIRE_TEX=1`
+    suite `Ran 76 tests ... OK`; app packaging made `resume-tailor.zip`
+    (51,772 bytes). Two snags, fixed in README: (1) the plain
+    `pip install` fails on Ubuntu 24.04 (`externally-managed-environment`).
+    A second container with `apt install ... python3-yaml
+    python3-pikepdf` and no pip got yaml 6.0.1, pikepdf 8.7.1, a 1-page
+    build and the suite OK, so the Ubuntu line now installs those and
+    says to skip pip. (2) The "Try it" commands fail from the home
+    folder (`can't open file`); they now start with `cd
+    ~/.claude/skills/resume-tailor`.
+  - Links: 9 relative links resolve to tracked files; the GitHub links
+    404 only because the repo is private (recheck in 6d); the Greenhouse
+    URL is an intentional placeholder.
+  - Claims: 6.9 GB = CTAN `MacTeX.pkg` content-length 6,865,013,189
+    bytes (the file Homebrew's `mactex-no-gui` 2026.0324 downloads);
+    "at most four questions" = `references/setup.md:89`; 93–97% fill =
+    `FILL_MIN` and the `< 97` cutoff in `build_resume.py`; the app
+    example "matched exactly" = the app build summary pasted 2026-11-12
+    (1 page, 100.3% with 94% natural, 19 bullets, 26.4 KB, same as the
+    Mac). The Times New Roman claim was overstated: the author's two
+    one-page bases built with the bundled Times TTFs vs. TeX Gyre Termes
+    (scratch copies of the private skill) gave identical fill (100.3%,
+    92.7%) and line count (49, 49), but one bullet wrapped one word
+    differently, so the README now says exactly that. The Affinda
+    findings come from the author's own earlier testing, with no file
+    to trace them to; kept pending the author's confirmation before 6d.
+  - App smoke test (built-in browser, test account): the zip from a
+    `git archive HEAD` checkout (22 files) replaced resume-tailor in
+    place. A new chat in the `tailor-resume` Project, with a made-up
+    Northbridge Robotics posting, built with no setup: `"library":
+    "/mnt/project"`, `"pages": 1`, `"fails": []`, 12 bullets,
+    `archive_used` SQL and scikit-learn (Claude asked the user to
+    confirm both), one warn for 72% fill (every relevant library bullet
+    already used).
+- **Review:** n/a (docs only).
+- **Gotchas:** The private resume skill's `vspa` base is 2 pages in both
+  fonts; that's the author's private skill, outside this repo.
 
 ### 2026-11-13 — Step 6b (privacy sweep) — Claude
 - **Did:** Built a private denylist (607 terms: contact details,
