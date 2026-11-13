@@ -1,5 +1,7 @@
 # resume-tailor
 
+[![Tests](https://github.com/jar-narvz/resume-tailor-skill/actions/workflows/tests.yml/badge.svg)](https://github.com/jar-narvz/resume-tailor-skill/actions/workflows/tests.yml)
+
 A Claude skill that tailors your resume to a job posting and hands back a
 one-page PDF. It only picks and reorders bullets from your own library, so
 a tailored resume can never claim more than you wrote.
@@ -246,9 +248,18 @@ there's no hand-maintained LaTeX to get out of sync.
 - **Read-only install:** two builds in a row from a skill folder with no
   write permission.
 
-These were manual runs. Automated tests so far cover adding an older
-position (`python3 -m unittest discover -s tests`); a full suite is
-planned.
+The automated stdlib unittest suite covers reframe and plan validation,
+PDF checks, sample and overflow builds, library lookup and validation,
+packaging, added positions, and the delivered TeX header. CI runs on
+Ubuntu 24.04 with Python 3.12 and requires all PDF build prerequisites;
+local runs skip build tests when tools are missing. Run the full suite
+with no skips allowed:
+
+```bash
+RESUME_TAILOR_REQUIRE_TEX=1 python3 -m unittest discover -s tests -v
+```
+
+The cover letter builder is tested by hand only.
 
 ## Limitations
 

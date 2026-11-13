@@ -11,6 +11,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import support
+
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -202,7 +204,7 @@ class AddExperienceTests(unittest.TestCase):
     def test_example_library_passes_validator(self):
         self.assertEqual(check(str(ROOT / "examples")), [])
 
-    @unittest.skipUnless(shutil.which("xelatex"), "xelatex is not on PATH")
+    @support.requires_tex
     def test_example_addition_end_to_end(self):
         plan = Path(self.temp.name) / "plan.json"
         plan.write_text(json.dumps({"variant": "swe", "add_experience": ["harbor"],

@@ -12,6 +12,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+import support
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import library
@@ -124,7 +126,7 @@ class FindLibraryTests(unittest.TestCase):
         self.assertNotIn("Traceback", result.stderr)
         self.assertFalse((self.root / "out").exists())
 
-    @unittest.skipUnless(shutil.which("xelatex"), "xelatex is not on PATH")
+    @support.requires_tex
     def test_build_from_read_only_project(self):
         self.populate(self.project)
         original = {path.name: path.read_bytes() for path in self.project.iterdir()}

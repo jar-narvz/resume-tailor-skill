@@ -370,6 +370,20 @@ noticing.
       since the sample is already at 100% fill) exits 1 with the
       "pages" fail and still writes the `.tex`. This shows the one-page
       check stops a bad build for real, not only with mocks.
+    - **Layout margin (added after review).** Both real-build tests must
+      pass on any reasonable TeX install, not just the author's Mac.
+      Measured 2026-11-12 on TeX Live 2026: the sample's natural fill is
+      94.0% (the 100.3% in the summary is after the fill stretch, which
+      falls back to the unstretched PDF if stretching spills to a second
+      page), so it has about 6% headroom. The overflow plan spills only 4
+      lines onto page 2, which is too close. Fix: the overflow plan adds
+      `harbor`, `plant-3` (the one project bullet the sample leaves
+      out), and the archive alternates `acme-a1` and `chat-a1`: about 9
+      more lines (24 bullets vs. 19), which puts it around 109% of the page.
+      The test asserts `pages >= 2`, not an exact count. Proof: run the
+      full suite inside an Ubuntu 24.04 container with the same apt
+      packages as CI, and record each build's natural fill there next to
+      the Mac numbers.
   - `tests/test_library_tools.py` covers the validator and the package:
     - `validate_library.py examples` exits 0, and three broken copies
       fail with their own message: a duplicate bullet ID, a variant

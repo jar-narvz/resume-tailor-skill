@@ -2,12 +2,74 @@
 
 ## Current state
 
-Steps 1–4 are done: implemented by Codex, reviewed and verified by Claude
-on 2026-11-12. Step 4 closed three claim loopholes (Built→Led swaps,
-number/unit swaps, substring skill matches). Next: step 5 (automated
-tests and CI), for Codex to implement; then step 6 (publish).
+Steps 1–4 are done. Step 5 (tests and CI) is implemented by Codex and
+reviewed and verified by Claude on 2026-11-12 on the Mac and in an
+Ubuntu 24.04 container matching CI (76 tests, 0 skipped, identical page
+fill; mutation checks fail as expected). It finishes when the first
+GitHub Actions run on the pushed commit is green. Then step 6 (publish).
 
 ## Log
+
+### 2026-11-12 — Step 5 review — Claude
+- **Did:** Reviewed Codex's step 5 diff against PLAN.md and ran Verify
+  locally, including the mutation checks.
+- **Changed:** PROGRESS.md only (no fixes needed).
+- **Verify:** `RESUME_TAILOR_REQUIRE_TEX=1 python3 -m unittest discover
+  -s tests -v` → `Ran 76 tests ... OK`, no skipped lines. Mutation runner
+  in the scratchpad (`mock.patch`, no edits to `scripts/`):
+  `check_reframe` disabled → 13 failures in test_plan_validation and
+  test_reframe; `check_pdf` disabled → 11 failures + 1 error in
+  test_check_pdf. The overflow test runs the CLI as a separate process,
+  so the patch can't reach it; checked by hand instead: the overflow plan
+  builds a 2-page PDF and exits 1 with the real check, and exits 0 with
+  `check_pdf` patched out in a wrapper, so the test would catch it.
+  `git diff scripts/` is empty. Ubuntu 24.04 container built to match
+  CI (Python 3.12.3, TeX Live 2023/Debian, `kpsewhich` finds
+  `/usr/share/texmf/fonts/opentype/public/tex-gyre/texgyretermes-regular.otf`):
+  `Ran 76 tests ... OK`, no skips. Natural fill there matches the Mac
+  exactly: sample 94.0% (stretched 100.3%, 19 bullets, `"fails": []`),
+  base swe 95.7%, base ml 93.3%. GitHub run: pending the user's push.
+- **Review:** No blocking findings. Only listed files touched; tests
+  assert exact fail messages, the sample-build test compares resolved
+  (reframed) bullets in full, not just their first five words, and the
+  package test validates from the extracted zip. Layout margin, checked
+  after review: the summary's 100.3% is the fill *after* stretching; the
+  sample's natural fill is 94.0% (about 6% headroom, and a stretch that
+  spills falls back to the unstretched PDF). The overflow test spilled
+  only 4 lines, so Codex widened it (adds `harbor`, `plant-3`, `acme-a1`,
+  `chat-a1`; asserts `pages >= 2`).
+- **Gotchas:** In-process `mock.patch` doesn't reach tests that run a
+  script as a subprocess; use a wrapper script for those.
+
+### 2026-11-12 — Step 5 — Codex
+- **Did:** Extended reframe and plan validation coverage; added mocked PDF
+  checks, real sample/overflow CLI builds, validator failures, and public
+  package layout/extracted validation tests. Added shared PDF prerequisites
+  with local skips and required-mode failures, switched the two existing
+  build decorators, configured Ubuntu 24.04/Python 3.12 CI, and updated the
+  README badge, suite instructions, and manual-only cover letter note.
+- **Changed:** tests/support.py, tests/test_check_pdf.py,
+  tests/test_sample_build.py, tests/test_library_tools.py,
+  tests/test_reframe.py, tests/test_plan_validation.py,
+  tests/test_add_experience.py, tests/test_find_library.py,
+  .github/workflows/tests.yml, README.md, PROGRESS.md.
+- **Verify:** Required local command exited 0; actual final output:
+
+  ```text
+  $ RESUME_TAILOR_REQUIRE_TEX=1 python3 -m unittest discover -s tests -v
+  Ran 76 tests in 8.729s
+
+  OK
+  ```
+
+  Confirmed 0 skipped. Real sample build: pages 1, fails [], bullets_used
+  19; all resolved bullet texts recovered. Overflow build exited 1 with
+  the pages failure and preserved its .tex. `git diff --check` passed;
+  `git diff --stat -- scripts/ PLAN.md` was empty.
+- **Review:** pending Claude
+- **Gotchas:** No new script bugs exposed; no tests omitted. Mutation
+  checks and the GitHub run are left to Claude as requested. Current state,
+  PLAN.md, and scripts/ were left unchanged. No commit or push.
 
 ### 2026-11-12 — Step 4 review — Claude
 - **Did:** Reviewed Codex's step 4 diff against PLAN.md and reran Verify.

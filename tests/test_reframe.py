@@ -45,6 +45,17 @@ class ReframeTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertEqual(check_reframe(original, text), [])
 
+    def test_unchanged_bullet_and_numbered_clause_reorder(self):
+        original = "Built 6 endpoints and wrote 3 tests"
+        self.assertEqual(check_reframe(original, original), [])
+        self.assertEqual(check_reframe(original, "Wrote 3 tests and built 6 endpoints"), [])
+
+    def test_removed_or_repeated_number_is_rejected(self):
+        for text in ("Built endpoints", "Built 6 endpoints and 6 endpoints"):
+            with self.subTest(text=text):
+                self.assertTrue(any("numbers changed:" in problem
+                                    for problem in check_reframe("Built 6 endpoints", text)))
+
     def test_sample_clause_reorder(self):
         plan = json.loads((ROOT / "examples/sample-plan.json").read_text())
         reframe = plan["experience"]["acme"][0]
