@@ -2,11 +2,9 @@
 
 ## Current state
 
-Steps 1–4 are done. Step 5 (tests and CI) is implemented by Codex and
-reviewed and verified by Claude on 2026-11-12 on the Mac and in an
-Ubuntu 24.04 container matching CI (76 tests, 0 skipped, identical page
-fill; mutation checks fail as expected). It finishes when the first
-GitHub Actions run on the pushed commit is green. Then step 6 (publish).
+Steps 1–5 are done. Step 5's CI passed on GitHub for commit (step 5 commit)
+(run (step 5 run): `Ran 76 tests ... OK`, no skips, TeX Live 2023/Debian).
+Next: step 6 (publish), which needs planning detail first.
 
 ## Log
 
@@ -28,7 +26,8 @@ GitHub Actions run on the pushed commit is green. Then step 6 (publish).
   `/usr/share/texmf/fonts/opentype/public/tex-gyre/texgyretermes-regular.otf`):
   `Ran 76 tests ... OK`, no skips. Natural fill there matches the Mac
   exactly: sample 94.0% (stretched 100.3%, 19 bullets, `"fails": []`),
-  base swe 95.7%, base ml 93.3%. GitHub run: pending the user's push.
+  base swe 95.7%, base ml 93.3%. GitHub run (step 5 run) on (step 5 commit): `completed success`, `Ran 76 tests
+  in 6.689s`, `OK`, no skipped lines.
 - **Review:** No blocking findings. Only listed files touched; tests
   assert exact fail messages, the sample-build test compares resolved
   (reframed) bullets in full, not just their first five words, and the
