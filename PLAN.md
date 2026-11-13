@@ -495,6 +495,41 @@ as the author email,** which anyone can read from a public repo
   address, and turn on GitHub's "Keep my email addresses private" and
   "Block command line pushes that expose my email" (the user changes
   these account settings).
+
+  **Decision (2026-11-12): option 1, rewrite to noreply,** done as
+  "rewrite locally, then recreate the GitHub repo" rather than a force
+  push. *Why recreate:* a force push leaves the old commits reachable on
+  GitHub. The repo's Activity page lists force pushes with links to the
+  pre-push commit, and the old Actions run links to it too, so the old
+  email stays one click away. A new repo with the same name has none of
+  that. Checked first: the GitHub repo has 0 stars, forks, issues, PRs,
+  releases, artifacts, caches, secrets, deployments, Pages or wiki, so
+  deleting it loses only the one CI run. Locally: one branch, no tags,
+  no stashes.
+  Procedure (the user runs every command; Claude gives them exactly):
+  1. Commit the planning docs so the tree is clean. Keep this folder
+     untouched as the backup until the new repo is verified.
+  2. `brew install git-filter-repo`. Make a fresh clone in a sibling
+     folder (`git clone --no-local`). In that clone, run `git filter-repo`
+     (no `--force` needed in a fresh clone) with:
+     - `--mailmap`: one line mapping only the old email to the noreply
+       address `207102629+jar-narvz@users.noreply.github.com` (confirm
+       it in GitHub → Settings → Emails first);
+     - `--replace-text`: replace the step 5 CI commit's short SHA and
+       its run ID in every historical file version, so no file in
+       history names an old SHA.
+  3. Check in the rewritten clone: `git log --all --format='%ae %ce' |
+     sort -u` shows only the noreply address, and the old SHA string
+     appears nowhere in `git log --all -p`. Set `git config user.email`
+     to the noreply address there before any new commit.
+  4. Delete the GitHub repo (Settings → Danger zone; the `gh` token
+     lacks `delete_repo`), recreate it **private** with the same name,
+     add it as `origin` in the rewritten clone, and push `main`. The push
+     starts a fresh CI run on the new SHAs.
+  5. The rewritten clone becomes the working folder; the old folder
+     stays as a local backup until step 6 is done.
+  6. The user turns on both GitHub email-privacy settings.
+  The repo stays private until 6b–6c pass.
 - **6b. Privacy sweep (Claude, read-only), repeatable and recorded in
   PROGRESS.md:**
   - **Denylist from the real library.** Build a list of the author's
@@ -505,23 +540,32 @@ as the author email,** which anyone can read from a public repo
     in the repo, PLAN.md or PROGRESS.md (PROGRESS records how many terms
     and how many matches, not the terms themselves).
   - Search the denylist plus the generic patterns from the first sweep
-    across: every tracked file at HEAD, every blob in history
-    (`git log --all -p`), all commit messages, and author/committer
-    metadata after 6a.
+    across every object that will be served: each unique blob from
+    `git rev-list --objects --all` (via `git cat-file`, with text and
+    binary blobs handled by type), every commit message, and
+    author/committer metadata after 6a. Run this in the rewritten clone,
+    which has no dangling objects.
   - Look inside binaries: `examples/sample-output.pdf` (docinfo, XMP,
-    `strings`), `docs/before-after.png` (text/EXIF chunks), and the zip
-    from `package_skill.py --no-library` (list its files and search its
-    extracted text).
-  - GitHub side: the Actions log of the latest run, repo secrets (should
-    be none), and the description and topics.
+    `strings`), `docs/before-after.png` (text/EXIF chunks), and the
+    release zip. Build the zip in a clean checkout of the release commit
+    (`package_skill.py` packages whatever files are in the folder, not
+    just tracked ones), list its entries, reject any file that isn't
+    tracked in git and any symlink, search its contents, and upload
+    exactly those audited bytes.
+  - GitHub side, on the recreated repo: Actions runs and logs,
+    artifacts, caches, secrets, releases, issues, PRs, wiki, Pages and
+    deployments. All should be empty apart from the new CI run, and
+    each is recorded as checked.
   - Anything found gets removed or replaced with made-up data in a normal
     commit. If it's in history, it goes back to 6a's decision.
 - **6c. Ready-for-anyone sweep:**
-  - **Fresh clone, README only.** Clone from GitHub into a temp dir and
-    follow the README literally, with no knowledge from this repo: the
-    "try it without setting anything up" commands, the full test
-    command, and `package_skill.py --no-library`. Every command must work
-    as written.
+  - **Fresh clone, fresh environment, README only.** In a plain
+    `ubuntu:24.04` container with nothing preinstalled, follow the
+    README literally: the Debian/Ubuntu requirements line, the pip line,
+    the clone, the "try it without setting anything up" commands, the
+    full test command, and the app-user packaging command. Every command
+    must work as written. (The packaging command already works on a bare
+    `python:3.12-slim` with no pip packages, checked 2026-11-12.)
   - **README read as a stranger:** every relative link resolves to a
     tracked file. Install steps match the current Claude app UI
     (Settings → Capabilities, Customize → Skills). Every number traces
@@ -532,32 +576,38 @@ as the author email,** which anyone can read from a public repo
     doesn't restructure.
   - **Claude app smoke test with the final zip.** The scripts changed
     since the last app test (steps 4–5), so upload the zip built from
-    the release commit to the test account and tailor the sample posting
-    once. The user uploads, and Claude drives the built-in browser.
+    the release commit to the test account. Then, in a new chat inside
+    the test Project, tailor a posting with the saved library. This
+    checks the new build and Project persistence. The user uploads, and
+    Claude drives the built-in browser.
   - Keep PLAN.md and PROGRESS.md public. *Why:* they show the
     plan → critique → implement → review process, which is part of what
     the portfolio demonstrates. They name only made-up candidates and the
     test account type, which the sweep confirms.
 - **6d. Publish (the user runs every outward-facing command; Claude gives
   them exactly):**
-  - `gh repo edit` with a one-line description and topics (`claude`,
-    `claude-skills`, `resume`, `latex`, `ats`, `python`).
+  - `gh repo edit --description "…" --add-topic claude,claude-skills,resume,latex,ats,python`.
   - `gh repo edit --visibility public --accept-visibility-change-consequences`.
-  - Tag `v1.0.0` on the release commit, and `gh release create v1.0.0`
-    with `resume-tailor.zip` (built from that commit) attached, a SHA-256
-    for the zip in the notes, and three short notes: what it does, how to
-    install, and the limitations link.
-  - After publishing, check logged out (the built-in browser in a fresh
-    tab with no GitHub session, or `curl`): the repo page loads, the
-    badge shows passing, the release asset downloads and matches its
-    SHA-256, and a commit's `.patch` URL shows no personal email.
+  - Tag `v1.0.0` on the release commit, `git push origin v1.0.0`,
+    confirm with `git ls-remote --tags origin` that the tag points at
+    the release SHA, then `gh release create v1.0.0 resume-tailor.zip
+    --verify-tag --title "v1.0.0" --notes-file <file>`. The notes give the
+    zip's SHA-256 and three short points: what it does, how to install,
+    and a link to Limitations.
+  - After publishing, check anonymously with `curl` (no auth; a browser
+    tab may still be signed in): the repo page loads, the badge SVG says
+    passing, the release asset downloads and matches its SHA-256, a
+    commit's `.patch` shows only the noreply email, and the Activity page
+    shows no force pushes.
 
 **Non-goals.** CONTRIBUTING.md, issue templates, a Skills marketplace
 listing, a demo video, a changelog beyond the release notes, and scrubbing
 the author's name (it's intentionally on the license).
 
-**Files.** Depends on what the sweeps find; expected: `README.md`,
-`PROGRESS.md`. History rewrite only if the user picks 6a option 1 or 3.
+**Files.** `README.md` (wording and claims pass only) and `PROGRESS.md`.
+A sweep finding outside those two files is recorded and fixed in its own
+small commit, before release, only if it's a privacy leak or a README
+command that fails. Anything else waits until after v1.0.0.
 
 **Verify.**
 
@@ -566,9 +616,11 @@ git log --all --format='%ae %ce' | sort -u
 gh repo view --json visibility,description,repositoryTopics
 gh release view v1.0.0 --json assets
 ```
-Expected: emails are only the noreply address (or the user chose to keep
-them); visibility `PUBLIC` with the description and topics; one asset,
-`resume-tailor.zip`. Plus, recorded in PROGRESS.md: denylist and pattern
+Expected: emails are only the noreply address; visibility `PUBLIC` with
+the description and topics; one asset, `resume-tailor.zip`. Also
+recorded: the release SHA; `git ls-remote origin` equal to local `main`
+and the tag; the CI run on the release SHA `completed success`; the
+anonymous download's SHA-256 equal to the audited zip's. Plus, recorded in PROGRESS.md: denylist and pattern
 search over HEAD, history, messages, binaries and the zip with 0
 unexpected matches; every fresh-clone command succeeded; the app smoke
 test summary (`"pages": 1`, `"fails": []`); and the logged-out checks
@@ -656,3 +708,41 @@ points 1 and 2 before deciding.
    run. **Accepted:** mutation runs use `mock.patch` from a scratch
    runner, cover `check_pdf` too, and the run is selected by commit SHA.
 
+
+**2026-11-12, Step 6, Codex critique (8 points).** Run with web search
+off after two stalled attempts.
+
+1. Old SHAs stay discoverable after a force push, and old file versions
+   name the step 5 CI commit. **Accepted, with a stronger fix:** a force
+   push also leaves the repo's Activity page linking to pre-push
+   commits, so 6a now recreates the GitHub repo instead of force-pushing
+   to it, and `--replace-text` removes the old SHA and run ID from
+   history. Making a GitHub Support garbage collection a gate is
+   **rejected**: after recreation, no GitHub page refers to the old
+   objects.
+2. The GitHub audit is too narrow. **Accepted:** inventoried now (all
+   empty apart from one CI run), and rechecked on the recreated repo.
+3. The rewrite needs a fresh clone, exact mailmap and address, and a
+   safe push. **Accepted:** fresh `--no-local` clone without `--force`,
+   email-only mapping, address confirmed in Settings, original folder
+   kept as backup. The lease and expected-SHA push advice no longer
+   applies, since the new repo starts empty.
+4. `git log -p` isn't every blob. **Accepted:** enumerate objects with
+   `rev-list --objects --all` and `cat-file`, in the rewritten clone,
+   which has no dangling objects.
+5. The zip can differ from the release. **Accepted:** build it from a
+   clean checkout of the release commit, reject untracked files and
+   symlinks, and upload those exact audited bytes.
+6. The stranger test starts with too much installed. **Accepted** for
+   the environment: a plain `ubuntu:24.04` container, following the
+   README. Its claim that the app packaging command needs pip packages
+   is **rejected**: it ran on a bare `python:3.12-slim`. A full setup
+   rerun in the app is **rejected**: setup was tested on a fresh account
+   and steps 4–5 changed only build checks; the smoke test now covers a
+   Project chat instead.
+7. Release commands are underspecified. **Accepted:** exact
+   `--description`/`--add-topic`, push and verify the tag, then
+   `gh release create --verify-tag`.
+8. Verify doesn't pin the release. **Accepted:** record the release SHA,
+   remote ref equality, CI on that SHA, and an anonymous `curl` download
+   hash. The open-ended file scope is now bounded.

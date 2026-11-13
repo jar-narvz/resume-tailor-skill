@@ -2,9 +2,9 @@
 
 ## Current state
 
-Steps 1–5 are done. Step 5's CI passed on GitHub for commit (step 5 commit)
-(run (step 5 run): `Ran 76 tests ... OK`, no skips, TeX Live 2023/Debian).
-Next: step 6 (publish), which needs planning detail first.
+Steps 1–5 are done. Step 5's CI passed on GitHub on the step 5 commit
+(`Ran 76 tests ... OK`, no skips, TeX Live 2023/Debian).
+Next: step 6 (publish), planned and critiqued. 6a (rewrite the commit email to noreply, recreate the GitHub repo) runs first.
 
 ## Log
 
@@ -17,9 +17,11 @@ Next: step 6 (publish), which needs planning detail first.
   author's personal address. Plan 6a leaves that decision to the user.
 - **Changed:** PLAN.md, PROGRESS.md
 - **Verify:** n/a (planning).
-- **Review:** Codex critique pending. `codex exec` stalled twice (once
-  on a web search, once at startup after an MCP auth error), so it was
-  stopped with no output. Rerun before step 6 starts.
+- **Review:** `codex exec` stalled twice (once on a web search, once at
+  startup after an MCP auth error). The third run, with
+  `-c tools.web_search=false`, returned 8 points, all recorded in
+  PLAN.md's Review log. The user chose to rewrite the commit email to
+  noreply; 6a now recreates the GitHub repo instead of force-pushing.
 - **Gotchas:** Don't pipe `codex exec` into `head`: that kills it early.
   Use `-o <file>` for the final message.
 
@@ -41,7 +43,7 @@ Next: step 6 (publish), which needs planning detail first.
   `/usr/share/texmf/fonts/opentype/public/tex-gyre/texgyretermes-regular.otf`):
   `Ran 76 tests ... OK`, no skips. Natural fill there matches the Mac
   exactly: sample 94.0% (stretched 100.3%, 19 bullets, `"fails": []`),
-  base swe 95.7%, base ml 93.3%. GitHub run (step 5 run) on (step 5 commit): `completed success`, `Ran 76 tests
+  base swe 95.7%, base ml 93.3%. GitHub run on the step 5 commit: `completed success`, `Ran 76 tests
   in 6.689s`, `OK`, no skipped lines.
 - **Review:** No blocking findings. Only listed files touched; tests
   assert exact fail messages, the sample-build test compares resolved
