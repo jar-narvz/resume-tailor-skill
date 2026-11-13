@@ -2,14 +2,70 @@
 
 ## Current state
 
-Steps 1–3 are done: implemented by Codex, reviewed and verified by Claude
-on 2026-11-12, including the by-hand Claude app check for step 3 (a
-Project chat tailored with no setup and reported `"library":
-"/mnt/project"`). Steps 4–5 are planned and critiqued by Codex. Next:
-step 4 (close three loopholes in the claim checks), for Codex to
-implement; then step 5 (tests and CI) and step 6 (publish).
+Steps 1–4 are done: implemented by Codex, reviewed and verified by Claude
+on 2026-11-12. Step 4 closed three claim loopholes (Built→Led swaps,
+number/unit swaps, substring skill matches). Next: step 5 (automated
+tests and CI), for Codex to implement; then step 6 (publish).
 
 ## Log
+
+### 2026-11-12 — Step 4 review — Claude
+- **Did:** Reviewed Codex's step 4 diff against PLAN.md and reran Verify.
+  Verb rule, number/next-word pairs, whole-token skill matching, docs and
+  the listed test cases match the plan; only listed files touched.
+- **Changed:** scripts/build_resume.py, tests/test_plan_validation.py,
+  README.md, PROGRESS.md
+- **Verify:** `Ran 39 tests ... OK`. Sample build `"fails": []`,
+  `"pages": 1`, `"bullets_used": 19`, `"reframes": 1`; validate
+  `"ok": true`. Base builds `--variant swe` and `ml`: `"pages": 1`,
+  `"fails": []`. The three probes from PLAN.md now fail: `words not in
+  the original bullet: led`, `numbers changed: [('25', 'minutes'), ('3',
+  'hours')] -> [('25', 'hours'), ('3', 'minutes')]`, and `skill 'Script'
+  ... is not in skills.md`.
+- **Review:** Findings fixed: (1) the rewrite dropped the old
+  `len(n) >= 3` guard on skills taken from bullet text, so "In", "To" and
+  "A" were accepted as skills (probed); restored it with a comment and
+  added `test_short_skill_from_bullet_word_is_rejected`. (2) README
+  "Verbatim validation" had an over-long line and jargon ("number/next-word
+  pair"); reworded in plain language. Noted, not fixed: an original with
+  "lead" as a noun ("lead time") unlocks Led/Managed swaps; rare, and the
+  plan defines the rule by stem.
+- **Gotchas:** none.
+
+### 2026-11-12 — Step 4 — Codex
+- **Did:** Restricted new swap verbs to the first word and leadership
+  swaps to originals with a leadership stem; compare sorted number/next-word
+  pairs; match skills from selected bullets as contiguous whole tokens.
+  Added regression coverage for the rejected and allowed reframes and
+  temp-copy library tests for Script rejection and Node.js acceptance.
+  Updated the reframe rules and matching skill/README wording.
+- **Changed:** scripts/build_resume.py, references/reframe-rules.md,
+  SKILL.md, README.md, tests/test_reframe.py (new),
+  tests/test_plan_validation.py (new), PROGRESS.md.
+- **Verify:** All three Step 4 commands exited 0. Actual output below
+  (per-test lines and unrelated build JSON fields omitted):
+
+  ```text
+  $ python3 -m unittest discover -s tests -v
+  Ran 38 tests in 5.010s
+
+  OK
+  $ python3 scripts/build_resume.py --library examples build examples/sample-plan.json out/v4
+   "reframes": 1,
+   "pages": 1,
+   "bullets_used": 19,
+   "fails": [],
+  $ python3 scripts/build_resume.py --library examples validate examples/sample-plan.json
+  {
+   "ok": true,
+   "fails": [],
+   "warns": []
+  }
+  ```
+- **Review:** pending Claude
+- **Gotchas:** Trimming the word immediately after a number is now
+  deliberately rejected; use the original bullet. The simple stemmer's
+  existing false rejections remain outside this step's scope. No commits.
 
 ### 2026-11-12 — Steps 4–5 planning — Claude
 - **Did:** Planned tests and CI, got a Codex critique (8 points), and

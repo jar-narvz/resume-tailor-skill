@@ -60,8 +60,8 @@ FILL_MIN = 93  # below this % of the page, add content instead of stretching spa
 # reorder / trim the original's own words. See references/reframe-rules.md.
 VERB_ALLOW = {
     "built", "designed", "developed", "engineered", "implemented", "created",
-    "wrote", "led", "managed", "maintained", "maintain", "manage", "lead",
-    "build", "design", "develop", "implement", "create",
+    "wrote", "maintained", "maintain", "write",
+    "build", "design", "develop", "engineer", "implement", "create",
 }
 CONNECTORS = {
     "a", "an", "the", "and", "or", "to", "of", "for", "in", "on", "with", "by",
@@ -93,7 +93,11 @@ def words(s):
 
 
 def numbers(s):
-    return sorted(re.findall(r"\d[\d,.]*\+?%?", s))
+    pairs = []
+    for match in re.finditer(r"\d[\d,.]*\+?%?", s):
+        following = words(s[match.end():])
+        pairs.append((match.group(), following[0] if following else ""))
+    return sorted(pairs)
 
 
 def stem(w):
@@ -111,8 +115,12 @@ def check_reframe(original, text):
     if numbers(original) != numbers(text):
         problems.append(f"numbers changed: {numbers(original)} -> {numbers(text)}")
     orig_stems = {stem(w) for w in words(original)}
-    allowed = orig_stems | {stem(v) for v in VERB_ALLOW} | CONNECTORS
-    new = [w for w in words(text) if stem(w) not in allowed and w not in allowed]
+    swaps = VERB_ALLOW.copy()
+    if orig_stems & {"led", "lead", "manag"}:
+        swaps.update({"led", "lead", "managed", "manage"})
+    allowed = orig_stems | CONNECTORS
+    new = [w for i, w in enumerate(words(text))
+           if stem(w) not in allowed and w not in allowed and not (i == 0 and w in swaps)]
     if new:
         problems.append("words not in the original bullet: " + ", ".join(sorted(set(new))))
     if len(words(text)) > len(words(original)) + 3:
@@ -252,11 +260,16 @@ def resolve(plan, library):
     # skills: every item must be on one of the user's real skills lists, or
     # appear verbatim in a bullet that is on this resume.
     out_skills = plan.get("skills") or d_skills
-    corpus = norm(" ".join(used_text))
+    corpus = [re.findall(r"[a-z0-9+#]+", text.lower()) for text in used_text]
     for line in out_skills:
         for item in line.get("items", []):
             n = norm(item)
-            if n in inventory or (len(n) >= 3 and n in corpus):
+            tokens = re.findall(r"[a-z0-9+#]+", item.lower())
+            # len(n) >= 3: short items ("Go", "C", "R") are common words or
+            # letters in prose, so they must come from a skills list.
+            if n in inventory or (len(n) >= 3 and tokens and any(
+                    tokens == bullet[i:i + len(tokens)]
+                    for bullet in corpus for i in range(len(bullet) - len(tokens) + 1))):
                 continue
             fails.append(f"skill {item!r} ({line.get('label')}) is not in skills.md, archive.md, "
                          f"a variant's default_skills, or a bullet on this resume — only list "

@@ -9,8 +9,11 @@ of a line a recruiter skims. It is not a rewrite.
 - **Reorder clauses** of the original bullet so the posting's technology
   or concept comes first.
 - **Swap the leading verb** for another from this list: Built, Designed,
-  Developed, Engineered, Implemented, Created, Wrote, Led, Managed,
-  Maintained (and their present-tense forms for current roles).
+  Developed, Engineered, Implemented, Created, Wrote, Maintained (and
+  their present-tense forms for current roles). Led/Lead and Managed/Manage
+  are allowed swaps only if the original already has a leadership stem
+  (led, lead, manag-). A swap-list word absent from the original is allowed
+  only as the first word.
 - **Drop a clause** to save a line, as long as what remains is still true
   on its own.
 - Small connectors (and, the, with, using, via, across, ...) to stitch the
@@ -22,8 +25,12 @@ of a line a recruiter skims. It is not a rewrite.
   verb list and connectors above. That rules out new technologies, new
   mechanisms, and new scope words ("distributed", "production",
   "scalable") in one check.
-- Changing, adding, or removing a number. Every metric (40+, 92%, 3 hours,
-  1,000 trials) is a real measurement.
+- Changing, adding, or removing a number or its next word. The build
+  compares sorted (number, next word) pairs, so clause reordering is fine,
+  but swapping "3 hours to 25 minutes" to "25 hours to 3 minutes" fails.
+  Every metric (40+, 92%, 3 hours, 1,000 trials) is a real measurement.
+  Trimming next to a number ("6 REST endpoints" → "6 endpoints") also
+  fails safely; use the original bullet instead.
 - Growing the bullet by more than three words.
 
 ## Why this is strict

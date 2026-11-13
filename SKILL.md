@@ -75,7 +75,8 @@ line on a resume is one the user approved: the library holds their
 bullets, and any stronger wording was suggested and accepted during setup
 or a later edit (`references/setup.md` step 4), never during tailoring.
 Every bullet is a library or archive ID used verbatim, or a reframe of one,
-which may only reorder clauses, swap the leading verb, or trim. Every
+which may only reorder clauses, swap the leading verb without adding
+leadership, or trim while preserving number/next-word pairs. Every
 skill must already be in `LIBRARY/skills.md`, `LIBRARY/archive.md`, a variant's
 `default_skills`, or a bullet on the page. The build enforces all of this
 and fails loudly, on purpose. Fabricated bullets and padded skills are the

@@ -191,11 +191,14 @@ couldn't back them up in an interview, and I wanted tailoring that could
 never quietly add claims like those back.
 
 **Verbatim validation.** A reframe may reorder clauses, swap the leading
-verb from a short list, or trim. The build rejects any word whose stem
-isn't in the original, any changed number, and any growth over three
-words ([reframe-rules.md](references/reframe-rules.md)). Skills face the
-same check against your inventory. A rule enforced in code holds up
-better than an instruction the model might forget.
+verb from a short list (never to "Led" or "Managed" unless the original
+says so), or trim. The build rejects any word whose stem isn't in the
+original, any changed number or change to what it measures ("3 hours"
+can't become "25 hours"), and any growth over three words
+([reframe-rules.md](references/reframe-rules.md)). A skill must be in your
+inventory or appear as whole words in a bullet on the page. A rule
+enforced in code holds up better than an instruction the model might
+forget.
 
 **The fill check.** A one-page resume that stops halfway looks thin. When
 the content ends at 93–97% of the page, the build stretches the vertical
